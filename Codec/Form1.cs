@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -14,7 +15,8 @@ namespace Codec
     public partial class Form1 : Form
     {
         string inputFileName = null;
-        Image[] inputImages = new Image[300];
+        ArrayList inputImagesAL = new ArrayList();
+        Image[] inputImages;
 
         string outputFile = null;
 
@@ -42,16 +44,33 @@ namespace Codec
                 progressBar.Visible = true;
                 // Convert input video to image array
                 var ffMpeg = new NReco.VideoConverter.FFMpegConverter();
-                for(int i = 0; i < 300; i++)
+
+                var hasFrame = true;
+                var count = 0;
+
+                while(hasFrame == true)
                 {
+                   
                     using (MemoryStream stream = new MemoryStream())
                     {
                         // video has 60 fps
-                        ffMpeg.GetVideoThumbnail(inputFileName, stream, (i / 30f));
-                        inputImages[i] = Image.FromStream(stream);
+                        ffMpeg.GetVideoThumbnail(inputFileName, stream, (count / 30f));
+                        if (stream.Length != 0)
+                        {
+                            inputImagesAL.Add(Image.FromStream(stream));
+                            progressBar.Value = count;
+                            count++;
+                        } else
+                        {
+                            hasFrame = false;
+                        }
+                        
                     }
-                    progressBar.Value = i;
+                 
                 }
+
+                inputImages = Array.ConvertAll(inputImagesAL.ToArray(), image => (Image)image); ;
+
                 inputPictureBox.Image = inputImages[timeBar.Value];
                 progressLabel.Visible = false;
                 progressBar.Visible = false;
