@@ -15,7 +15,6 @@ namespace Codec
     public partial class Form1 : Form
     {
         string inputFileName = null;
-        ArrayList inputImagesAL = new ArrayList();
         Image[] inputImages;
 
         string outputFile = null;
@@ -45,6 +44,7 @@ namespace Codec
                 // Convert input video to image array
                 var ffMpeg = new NReco.VideoConverter.FFMpegConverter();
 
+                ArrayList inputImagesAL = new ArrayList();
                 var hasFrame = true;
                 var count = 0;
 
