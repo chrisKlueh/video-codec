@@ -1,13 +1,7 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Codec
@@ -27,7 +21,7 @@ namespace Codec
         // If no input file is selected, clicking the input picture makes the user choose a file.
         private void inputPictureBox_Click(object sender, EventArgs e)
         {
-            if(inputFileName == null)
+            if (inputFileName == null)
             {
                 OpenFileDialog ofd = new OpenFileDialog();
                 ofd.InitialDirectory = Application.StartupPath;
@@ -48,9 +42,8 @@ namespace Codec
                 var hasFrame = true;
                 var count = 0;
 
-                while(hasFrame == true)
+                while (hasFrame == true)
                 {
-                   
                     using (MemoryStream stream = new MemoryStream())
                     {
                         // video has 30 fps
@@ -60,17 +53,14 @@ namespace Codec
                             inputImagesAL.Add(Image.FromStream(stream));
                             progressBar.Value = count;
                             count++;
-                        } else
+                        }
+                        else
                         {
                             hasFrame = false;
                         }
-                        
                     }
-                 
                 }
-
-                inputImages = Array.ConvertAll(inputImagesAL.ToArray(), image => (Image)image); ;
-
+                inputImages = Array.ConvertAll(inputImagesAL.ToArray(), image => (Image)image);
                 inputPictureBox.Image = inputImages[timeBar.Value];
                 progressLabel.Visible = false;
                 progressBar.Visible = false;
@@ -80,7 +70,10 @@ namespace Codec
         // show the chosen image(s)
         private void timeBar_ValueChanged(object sender, EventArgs e)
         {
-            inputPictureBox.Image = inputImages[timeBar.Value];
+            if(inputImages != null && timeBar.Value < inputImages.Length)
+            {
+                inputPictureBox.Image = inputImages[timeBar.Value];
+            }
         }
 
         // Convert input using our codec
