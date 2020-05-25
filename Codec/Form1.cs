@@ -53,7 +53,7 @@ namespace Codec
                    
                     using (MemoryStream stream = new MemoryStream())
                     {
-                        // video has 60 fps
+                        // video has 30 fps
                         ffMpeg.GetVideoThumbnail(inputFileName, stream, (count / 30f));
                         if (stream.Length != 0)
                         {
