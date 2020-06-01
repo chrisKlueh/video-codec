@@ -36,6 +36,9 @@
             this.convertButton = new System.Windows.Forms.Button();
             this.progressBar = new System.Windows.Forms.ProgressBar();
             this.progressLabel = new System.Windows.Forms.Label();
+            this.keyFrameInput = new System.Windows.Forms.TextBox();
+            this.keyFrameLabel1 = new System.Windows.Forms.Label();
+            this.keyFrameLabel2 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.timeBar)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.outputPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.inputPictureBox)).BeginInit();
@@ -61,12 +64,13 @@
             // 
             // timeBar
             // 
-            this.timeBar.Location = new System.Drawing.Point(12, 281);
+            this.timeBar.LargeChange = 30;
+            this.timeBar.Location = new System.Drawing.Point(12, 320);
             this.timeBar.Maximum = 299;
             this.timeBar.Name = "timeBar";
             this.timeBar.Size = new System.Drawing.Size(646, 45);
             this.timeBar.TabIndex = 4;
-            this.timeBar.TickFrequency = 5;
+            this.timeBar.TickFrequency = 30;
             this.timeBar.ValueChanged += new System.EventHandler(this.timeBar_ValueChanged);
             // 
             // outputPictureBox
@@ -92,7 +96,7 @@
             // 
             // convertButton
             // 
-            this.convertButton.Location = new System.Drawing.Point(252, 319);
+            this.convertButton.Location = new System.Drawing.Point(252, 358);
             this.convertButton.Name = "convertButton";
             this.convertButton.Size = new System.Drawing.Size(152, 33);
             this.convertButton.TabIndex = 5;
@@ -119,11 +123,41 @@
             this.progressLabel.Text = "working...";
             this.progressLabel.Visible = false;
             // 
+            // keyFrameInput
+            // 
+            this.keyFrameInput.Location = new System.Drawing.Point(101, 294);
+            this.keyFrameInput.Name = "keyFrameInput";
+            this.keyFrameInput.Size = new System.Drawing.Size(33, 20);
+            this.keyFrameInput.TabIndex = 8;
+            this.keyFrameInput.Text = "30";
+            this.keyFrameInput.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // keyFrameLabel1
+            // 
+            this.keyFrameLabel1.AutoSize = true;
+            this.keyFrameLabel1.Location = new System.Drawing.Point(12, 297);
+            this.keyFrameLabel1.Name = "keyFrameLabel1";
+            this.keyFrameLabel1.Size = new System.Drawing.Size(83, 13);
+            this.keyFrameLabel1.TabIndex = 9;
+            this.keyFrameLabel1.Text = "Key frame every";
+            // 
+            // keyFrameLabel2
+            // 
+            this.keyFrameLabel2.AutoSize = true;
+            this.keyFrameLabel2.Location = new System.Drawing.Point(140, 297);
+            this.keyFrameLabel2.Name = "keyFrameLabel2";
+            this.keyFrameLabel2.Size = new System.Drawing.Size(38, 13);
+            this.keyFrameLabel2.TabIndex = 10;
+            this.keyFrameLabel2.Text = "frames";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(670, 542);
+            this.Controls.Add(this.keyFrameLabel2);
+            this.Controls.Add(this.keyFrameLabel1);
+            this.Controls.Add(this.keyFrameInput);
             this.Controls.Add(this.progressLabel);
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.convertButton);
@@ -152,6 +186,9 @@
         private System.Windows.Forms.Button convertButton;
         private System.Windows.Forms.ProgressBar progressBar;
         private System.Windows.Forms.Label progressLabel;
+        private System.Windows.Forms.TextBox keyFrameInput;
+        private System.Windows.Forms.Label keyFrameLabel1;
+        private System.Windows.Forms.Label keyFrameLabel2;
     }
 }
 
