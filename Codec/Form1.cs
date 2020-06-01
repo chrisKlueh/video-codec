@@ -8,6 +8,8 @@ namespace Codec
 {
     public partial class Form1 : Form
     {
+        int keyFrameEvery = 30;
+
         string inputFileName = null;
         Image[] inputImages;
 
@@ -73,6 +75,22 @@ namespace Codec
             if(inputImages != null && timeBar.Value < inputImages.Length)
             {
                 inputPictureBox.Image = inputImages[timeBar.Value];
+            }
+        }
+        
+        // set which frames will be a key frames (valid range is every 1 - 60 frames)
+        private void keyFrameSaveButton_Click(object sender, EventArgs e)
+        {
+            int tempNum = Int32.Parse(keyFrameInput.Text);
+            if(tempNum > 0 && tempNum <= 60)
+            {
+                keyFrameEvery = tempNum;
+                timeBar.LargeChange = keyFrameEvery;
+                timeBar.SmallChange = keyFrameEvery;
+                timeBar.TickFrequency = keyFrameEvery;
+            } else
+            {
+                // TODO: alert error?
             }
         }
 

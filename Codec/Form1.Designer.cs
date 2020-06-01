@@ -39,6 +39,7 @@
             this.keyFrameInput = new System.Windows.Forms.TextBox();
             this.keyFrameLabel1 = new System.Windows.Forms.Label();
             this.keyFrameLabel2 = new System.Windows.Forms.Label();
+            this.keyFrameSaveButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.timeBar)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.outputPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.inputPictureBox)).BeginInit();
@@ -65,10 +66,12 @@
             // timeBar
             // 
             this.timeBar.LargeChange = 30;
-            this.timeBar.Location = new System.Drawing.Point(12, 320);
+            this.timeBar.Location = new System.Drawing.Point(12, 309);
+            this.timeBar.Margin = new System.Windows.Forms.Padding(0, 0, 0, 0);
             this.timeBar.Maximum = 299;
             this.timeBar.Name = "timeBar";
             this.timeBar.Size = new System.Drawing.Size(646, 45);
+            this.timeBar.SmallChange = 30;
             this.timeBar.TabIndex = 4;
             this.timeBar.TickFrequency = 30;
             this.timeBar.ValueChanged += new System.EventHandler(this.timeBar_ValueChanged);
@@ -96,7 +99,7 @@
             // 
             // convertButton
             // 
-            this.convertButton.Location = new System.Drawing.Point(252, 358);
+            this.convertButton.Location = new System.Drawing.Point(252, 357);
             this.convertButton.Name = "convertButton";
             this.convertButton.Size = new System.Drawing.Size(152, 33);
             this.convertButton.TabIndex = 5;
@@ -125,7 +128,7 @@
             // 
             // keyFrameInput
             // 
-            this.keyFrameInput.Location = new System.Drawing.Point(101, 294);
+            this.keyFrameInput.Location = new System.Drawing.Point(101, 283);
             this.keyFrameInput.Name = "keyFrameInput";
             this.keyFrameInput.Size = new System.Drawing.Size(33, 20);
             this.keyFrameInput.TabIndex = 8;
@@ -135,7 +138,7 @@
             // keyFrameLabel1
             // 
             this.keyFrameLabel1.AutoSize = true;
-            this.keyFrameLabel1.Location = new System.Drawing.Point(12, 297);
+            this.keyFrameLabel1.Location = new System.Drawing.Point(12, 286);
             this.keyFrameLabel1.Name = "keyFrameLabel1";
             this.keyFrameLabel1.Size = new System.Drawing.Size(83, 13);
             this.keyFrameLabel1.TabIndex = 9;
@@ -144,17 +147,28 @@
             // keyFrameLabel2
             // 
             this.keyFrameLabel2.AutoSize = true;
-            this.keyFrameLabel2.Location = new System.Drawing.Point(140, 297);
+            this.keyFrameLabel2.Location = new System.Drawing.Point(140, 286);
             this.keyFrameLabel2.Name = "keyFrameLabel2";
             this.keyFrameLabel2.Size = new System.Drawing.Size(38, 13);
             this.keyFrameLabel2.TabIndex = 10;
             this.keyFrameLabel2.Text = "frames";
+            // 
+            // keyFrameSaveButton
+            // 
+            this.keyFrameSaveButton.Location = new System.Drawing.Point(184, 281);
+            this.keyFrameSaveButton.Name = "keyFrameSaveButton";
+            this.keyFrameSaveButton.Size = new System.Drawing.Size(75, 23);
+            this.keyFrameSaveButton.TabIndex = 11;
+            this.keyFrameSaveButton.Text = "save";
+            this.keyFrameSaveButton.UseVisualStyleBackColor = true;
+            this.keyFrameSaveButton.Click += new System.EventHandler(this.keyFrameSaveButton_Click);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(670, 542);
+            this.Controls.Add(this.keyFrameSaveButton);
             this.Controls.Add(this.keyFrameLabel2);
             this.Controls.Add(this.keyFrameLabel1);
             this.Controls.Add(this.keyFrameInput);
@@ -189,6 +203,7 @@
         private System.Windows.Forms.TextBox keyFrameInput;
         private System.Windows.Forms.Label keyFrameLabel1;
         private System.Windows.Forms.Label keyFrameLabel2;
+        private System.Windows.Forms.Button keyFrameSaveButton;
     }
 }
 
