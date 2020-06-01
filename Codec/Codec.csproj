@@ -92,5 +92,8 @@
   <ItemGroup>
     <None Include="outputDefault.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="playButton.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

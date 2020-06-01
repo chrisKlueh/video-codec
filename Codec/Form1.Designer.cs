@@ -31,8 +31,6 @@
             this.inputSizeLabel = new System.Windows.Forms.Label();
             this.outputSizeLabel = new System.Windows.Forms.Label();
             this.timeBar = new System.Windows.Forms.TrackBar();
-            this.outputPictureBox = new System.Windows.Forms.PictureBox();
-            this.inputPictureBox = new System.Windows.Forms.PictureBox();
             this.convertButton = new System.Windows.Forms.Button();
             this.progressBar = new System.Windows.Forms.ProgressBar();
             this.progressLabel = new System.Windows.Forms.Label();
@@ -40,6 +38,9 @@
             this.keyFrameLabel1 = new System.Windows.Forms.Label();
             this.keyFrameLabel2 = new System.Windows.Forms.Label();
             this.keyFrameSaveButton = new System.Windows.Forms.Button();
+            this.playButton = new System.Windows.Forms.Button();
+            this.outputPictureBox = new System.Windows.Forms.PictureBox();
+            this.inputPictureBox = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.timeBar)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.outputPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.inputPictureBox)).BeginInit();
@@ -66,7 +67,7 @@
             // timeBar
             // 
             this.timeBar.LargeChange = 30;
-            this.timeBar.Location = new System.Drawing.Point(12, 309);
+            this.timeBar.Location = new System.Drawing.Point(12, 397);
             this.timeBar.Margin = new System.Windows.Forms.Padding(0, 0, 0, 0);
             this.timeBar.Maximum = 299;
             this.timeBar.Name = "timeBar";
@@ -76,30 +77,9 @@
             this.timeBar.TickFrequency = 30;
             this.timeBar.ValueChanged += new System.EventHandler(this.timeBar_ValueChanged);
             // 
-            // outputPictureBox
-            // 
-            this.outputPictureBox.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.outputPictureBox.BackgroundImage = global::Codec.Properties.Resources.outputDefault;
-            this.outputPictureBox.Location = new System.Drawing.Point(338, 12);
-            this.outputPictureBox.Name = "outputPictureBox";
-            this.outputPictureBox.Size = new System.Drawing.Size(320, 240);
-            this.outputPictureBox.TabIndex = 2;
-            this.outputPictureBox.TabStop = false;
-            // 
-            // inputPictureBox
-            // 
-            this.inputPictureBox.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.inputPictureBox.BackgroundImage = global::Codec.Properties.Resources.inputDefault;
-            this.inputPictureBox.Location = new System.Drawing.Point(12, 12);
-            this.inputPictureBox.Name = "inputPictureBox";
-            this.inputPictureBox.Size = new System.Drawing.Size(320, 240);
-            this.inputPictureBox.TabIndex = 0;
-            this.inputPictureBox.TabStop = false;
-            this.inputPictureBox.Click += new System.EventHandler(this.inputPictureBox_Click);
-            // 
             // convertButton
             // 
-            this.convertButton.Location = new System.Drawing.Point(252, 357);
+            this.convertButton.Location = new System.Drawing.Point(252, 445);
             this.convertButton.Name = "convertButton";
             this.convertButton.Size = new System.Drawing.Size(152, 33);
             this.convertButton.TabIndex = 5;
@@ -128,7 +108,7 @@
             // 
             // keyFrameInput
             // 
-            this.keyFrameInput.Location = new System.Drawing.Point(101, 283);
+            this.keyFrameInput.Location = new System.Drawing.Point(101, 371);
             this.keyFrameInput.Name = "keyFrameInput";
             this.keyFrameInput.Size = new System.Drawing.Size(33, 20);
             this.keyFrameInput.TabIndex = 8;
@@ -138,7 +118,7 @@
             // keyFrameLabel1
             // 
             this.keyFrameLabel1.AutoSize = true;
-            this.keyFrameLabel1.Location = new System.Drawing.Point(12, 286);
+            this.keyFrameLabel1.Location = new System.Drawing.Point(12, 374);
             this.keyFrameLabel1.Name = "keyFrameLabel1";
             this.keyFrameLabel1.Size = new System.Drawing.Size(83, 13);
             this.keyFrameLabel1.TabIndex = 9;
@@ -147,7 +127,7 @@
             // keyFrameLabel2
             // 
             this.keyFrameLabel2.AutoSize = true;
-            this.keyFrameLabel2.Location = new System.Drawing.Point(140, 286);
+            this.keyFrameLabel2.Location = new System.Drawing.Point(140, 374);
             this.keyFrameLabel2.Name = "keyFrameLabel2";
             this.keyFrameLabel2.Size = new System.Drawing.Size(38, 13);
             this.keyFrameLabel2.TabIndex = 10;
@@ -155,7 +135,7 @@
             // 
             // keyFrameSaveButton
             // 
-            this.keyFrameSaveButton.Location = new System.Drawing.Point(184, 281);
+            this.keyFrameSaveButton.Location = new System.Drawing.Point(184, 369);
             this.keyFrameSaveButton.Name = "keyFrameSaveButton";
             this.keyFrameSaveButton.Size = new System.Drawing.Size(75, 23);
             this.keyFrameSaveButton.TabIndex = 11;
@@ -163,11 +143,43 @@
             this.keyFrameSaveButton.UseVisualStyleBackColor = true;
             this.keyFrameSaveButton.Click += new System.EventHandler(this.keyFrameSaveButton_Click);
             // 
+            // playButton
+            // 
+            this.playButton.Image = global::Codec.Properties.Resources.playButton1;
+            this.playButton.Location = new System.Drawing.Point(254, 295);
+            this.playButton.Name = "playButton";
+            this.playButton.Size = new System.Drawing.Size(143, 50);
+            this.playButton.TabIndex = 12;
+            this.playButton.UseVisualStyleBackColor = true;
+            this.playButton.Click += new System.EventHandler(this.playButton_Click);
+            // 
+            // outputPictureBox
+            // 
+            this.outputPictureBox.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.outputPictureBox.BackgroundImage = global::Codec.Properties.Resources.outputDefault;
+            this.outputPictureBox.Location = new System.Drawing.Point(338, 12);
+            this.outputPictureBox.Name = "outputPictureBox";
+            this.outputPictureBox.Size = new System.Drawing.Size(320, 240);
+            this.outputPictureBox.TabIndex = 2;
+            this.outputPictureBox.TabStop = false;
+            // 
+            // inputPictureBox
+            // 
+            this.inputPictureBox.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.inputPictureBox.BackgroundImage = global::Codec.Properties.Resources.inputDefault;
+            this.inputPictureBox.Location = new System.Drawing.Point(12, 12);
+            this.inputPictureBox.Name = "inputPictureBox";
+            this.inputPictureBox.Size = new System.Drawing.Size(320, 240);
+            this.inputPictureBox.TabIndex = 0;
+            this.inputPictureBox.TabStop = false;
+            this.inputPictureBox.Click += new System.EventHandler(this.inputPictureBox_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(670, 542);
+            this.Controls.Add(this.playButton);
             this.Controls.Add(this.keyFrameSaveButton);
             this.Controls.Add(this.keyFrameLabel2);
             this.Controls.Add(this.keyFrameLabel1);
@@ -204,6 +216,7 @@
         private System.Windows.Forms.Label keyFrameLabel1;
         private System.Windows.Forms.Label keyFrameLabel2;
         private System.Windows.Forms.Button keyFrameSaveButton;
+        private System.Windows.Forms.Button playButton;
     }
 }
 

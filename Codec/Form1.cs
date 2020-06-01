@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Drawing;
 using System.IO;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace Codec
@@ -91,6 +92,22 @@ namespace Codec
             } else
             {
                 // TODO: alert error?
+            }
+        }
+
+        // play the video
+        private void playButton_Click(object sender, EventArgs e)
+        {
+            if (inputImages != null && timeBar.Value < inputImages.Length)
+            {
+                while(timeBar.Value < inputImages.Length - 1)
+                {
+                    timeBar.Value += 1;
+                    inputPictureBox.Image = inputImages[timeBar.Value];
+                    inputPictureBox.Refresh();
+                    // 1000 / 33  -->  ~ 30 fps
+                    Thread.Sleep(33);
+                }
             }
         }
 
