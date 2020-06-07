@@ -15,6 +15,7 @@ namespace Codec
         Image[] inputImages;
 
         string outputFile = null;
+        Image[] outputImages;
 
         public Form1()
         {
@@ -114,6 +115,8 @@ namespace Codec
         // Convert input using our codec
         private void convertButton_Click(object sender, EventArgs e)
         {
+            // Color subsampling
+            outputImages = ColorSubsampler.GetSubSampledImages(inputImages);
             // TODO
         }
 
