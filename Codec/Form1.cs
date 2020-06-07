@@ -116,7 +116,11 @@ namespace Codec
         private void convertButton_Click(object sender, EventArgs e)
         {
             // Color subsampling
-            outputImages = ColorSubsampler.GetSubSampledImages(inputImages);
+            int A = Int32.Parse(colorAinput.Text);
+            int B = Int32.Parse(colorBinput.Text);
+            int C = Int32.Parse(colorCinput.Text);
+            outputImages = ColorSubsampler.GetSubSampledImages(inputImages, A, B, C);
+
             // TODO
         }
 

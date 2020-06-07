@@ -9,8 +9,9 @@ namespace Codec
 {
     class ColorSubsampler
     {
-        public static Image[] GetSubSampledImages(Image[] inputImages)
+        public static Image[] GetSubSampledImages(Image[] inputImages, int A, int B, int C)
         {
+            
             // TODO
             return inputImages;
         }
