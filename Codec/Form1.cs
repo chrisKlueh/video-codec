@@ -14,8 +14,9 @@ namespace Codec
         string inputFileName = null;
         Image[] inputImages;
 
+        YCbCrImage[] tempImages;
+
         string outputFile = null;
-        Image[] outputImages;
 
         public Form1()
         {
@@ -115,11 +116,40 @@ namespace Codec
         // Convert input using our codec
         private void convertButton_Click(object sender, EventArgs e)
         {
+            // Convert RGB images to YCbCr images
+            tempImages = new YCbCrImage[inputImages.Length];
+            for (int i = 0; i < inputImages.Length; i++)
+            {
+                Bitmap bitmap = new Bitmap(inputImages[i]);
+                YCbCrImage yCbCrImage = new YCbCrImage(bitmap.Width, bitmap.Height);
+                for (int x = 0; x < bitmap.Width; x++)
+                {
+                    for (int y = 0; y < bitmap.Height; y++)
+                    {
+                        Color pixel = bitmap.GetPixel(x, y);
+                        double Y =  pixel.R * 0.299000 + pixel.G * 0.587000 + pixel.B * 0.114000;
+                        double Cb = pixel.R * -0.168736 + pixel.G * -0.331264 + pixel.B * 0.500000 + 128;
+                        double Cr = pixel.R * 0.500000 + pixel.G * -0.418688 + pixel.B * -0.081312 + 128;
+                        yCbCrImage.pixels[x, y] = new YCbCrPixel(Y, Cb, Cr);
+                    }
+                }
+            }
             // Color subsampling
-            int A = Int32.Parse(colorAinput.Text);
+            string subsamplingMode = "4:4:4";
             int B = Int32.Parse(colorBinput.Text);
             int C = Int32.Parse(colorCinput.Text);
-            outputImages = ColorSubsampler.GetSubSampledImages(inputImages, A, B, C);
+            if (B == 2)
+            {
+                if (C == 2)
+                {
+                    subsamplingMode = "4:2:2";
+                }
+                else if (C == 0)
+                {
+                    subsamplingMode = "4:2:0";
+                }
+            }
+            tempImages = ColorSubsampler.GetSubSampledImages(inputImages, subsamplingMode);
 
             // TODO
         }
