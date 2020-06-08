@@ -1,9 +1,4 @@
 using System;
-using System.Collections;
-using System.Drawing;
-using System.IO;
-using System.Threading;
-using System.Windows.Forms;
 
 namespace Codec
 {
