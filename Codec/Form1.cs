@@ -133,7 +133,9 @@ namespace Codec
                         yCbCrImage.pixels[x, y] = new YCbCrPixel(Y, Cb, Cr);
                     }
                 }
+                tempImages[i] = yCbCrImage;
             }
+
             // Color subsampling
             string subsamplingMode = "4:4:4";
             int B = Int32.Parse(colorBinput.Text);
