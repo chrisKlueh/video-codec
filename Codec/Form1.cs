@@ -117,6 +117,13 @@ namespace Codec
         private void convertButton_Click(object sender, EventArgs e)
         {
             // Convert RGB images to YCbCr images
+            progressLabel.Text = "Converting rgb to ycbcr...";
+            progressLabel.Visible = true;
+            progressBar.Value = 0;
+            progressBar.Visible = true;
+            // needed to update UI
+            this.Update();
+
             tempImages = new YCbCrImage[inputImages.Length];
             for (int i = 0; i < inputImages.Length; i++)
             {
@@ -134,7 +141,13 @@ namespace Codec
                     }
                 }
                 tempImages[i] = yCbCrImage;
+                progressBar.Value = i;
             }
+
+            progressLabel.Text = "Chroma subsampling...";
+            progressBar.Value = 0;
+            // needed to update UI
+            this.Update();
 
             // Color subsampling
             string subsamplingMode = "4:4:4";
@@ -151,7 +164,14 @@ namespace Codec
                     subsamplingMode = "4:2:0";
                 }
             }
-            tempImages = ColorSubsampler.GetSubSampledImages(inputImages, subsamplingMode);
+            for(int i = 0; i < tempImages.Length; i++)
+            {
+                tempImages[i].SetSubsamplingMode(subsamplingMode);
+                progressBar.Value = i;
+            }
+
+            progressLabel.Visible = false;
+            progressBar.Visible = false;
 
             // TODO
         }
