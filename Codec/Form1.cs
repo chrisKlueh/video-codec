@@ -207,10 +207,12 @@ namespace Codec
                 {
                     for (int y = 0; y < bitmap.Height; y++)
                     {
+                        // Color conversion values from
+                        // https://www.renesas.com/eu/en/www/doc/application-note/an9717.pdf
                         Color pixel = bitmap.GetPixel(x, y);
-                        double Y = 0.2989 * pixel.R + 0.5866 * pixel.G + 0.1145 * pixel.B;
-                        double Cb = -0.1687 * pixel.R - 0.3313 * pixel.G + 0.5000 * pixel.B;
-                        double Cr = 0.5000 * pixel.R - 0.4184 * pixel.G - 0.0816 * pixel.B;
+                        double Y = 0.257 * pixel.R + 0.504 * pixel.G + 0.098 * pixel.B + 16;
+                        double Cb = -0.148 * pixel.R - 0.291 * pixel.G + 0.439 * pixel.B + 128;
+                        double Cr = 0.439 * pixel.R - 0.368 * pixel.G - 0.071 * pixel.B + 128;
                         yCbCrImage.pixels[x, y] = new YCbCrPixel(Y, Cb, Cr);
                     }
                 }
@@ -241,10 +243,16 @@ namespace Codec
                 {
                     for (int y = 0; y < tempImages[i].height; y++)
                     {
+                        // Color conversion values from
+                        // https://www.renesas.com/eu/en/www/doc/application-note/an9717.pdf
                         YCbCrPixel pixel = tempImages[i].GetPixel(x, y);
-                        int r = (int)Math.Max(0.0f, Math.Min(1.0f, (double)(pixel.getY() + 0.0000 * pixel.getCb() + 1.4022 * pixel.getCr())));
-                        int g = (int)Math.Max(0.0f, Math.Min(1.0f, (double)(pixel.getY() - 0.3456 * pixel.getCb() - 0.7145 * pixel.getCr())));
-                        int b = (int)Math.Max(0.0f, Math.Min(1.0f, (double)(pixel.getY() + 1.7710 * pixel.getCb() + 0.0000 * pixel.getCr())));
+                        int r = (int)(1.164 * (pixel.getY() - 16) + 1.596 * (pixel.getCr() - 128));
+                        int g = (int)(1.164 * (pixel.getY() - 16) - 0.813 * (pixel.getCr() - 128) - 0.392 * (pixel.getCb() - 128));
+                        int b = (int)(1.164 * (pixel.getY() - 16) + 2.017 * (pixel.getCb() - 128));
+                        // safety mechanism
+                        getValidRGBValue(r, out r);
+                        getValidRGBValue(g, out g);
+                        getValidRGBValue(b, out b);
                         Color color = Color.FromArgb(r, g, b);
                         bitmap.SetPixel(x, y, color);
                     }
@@ -257,6 +265,20 @@ namespace Codec
             progressBar.Visible = false;
             // needed to update UI
             this.Update();
+        }
+
+        private void getValidRGBValue(int value, out int validValue)
+        {
+            if(value < 0)
+            {
+                validValue = 0;
+            } else if (value > 255)
+            {
+                validValue = 255;
+            } else
+            {
+                validValue = value;
+            }
         }
 
         #endregion
