@@ -78,7 +78,17 @@ namespace Codec
         {
             if(inputImages != null && timeBar.Value < inputImages.Length)
             {
-                inputPictureBox.Image = inputImages[timeBar.Value];
+                if(inputCheckBox.Checked)
+                {
+                    inputPictureBox.Image = inputImages[timeBar.Value];
+                }
+            }
+            if (outputImages != null && timeBar.Value < outputImages.Length)
+            {
+                if (outputCheckBox.Checked)
+                {
+                    outputPictureBox.Image = outputImages[timeBar.Value];
+                }
             }
         }
         
@@ -101,13 +111,21 @@ namespace Codec
         // play the video
         private void playButton_Click(object sender, EventArgs e)
         {
-            if (inputImages != null && timeBar.Value < inputImages.Length)
+            if ((inputCheckBox.Checked && (inputImages != null && timeBar.Value < inputImages.Length)) || (outputCheckBox.Checked && (outputImages != null && timeBar.Value < outputImages.Length)))
             {
                 while(timeBar.Value < inputImages.Length - 1)
                 {
                     timeBar.Value += 1;
-                    inputPictureBox.Image = inputImages[timeBar.Value];
-                    inputPictureBox.Refresh();
+                    if (inputCheckBox.Checked)
+                    {
+                        inputPictureBox.Image = inputImages[timeBar.Value];
+                        inputPictureBox.Refresh();
+                    }
+                    if (outputCheckBox.Checked)
+                    {
+                        outputPictureBox.Image = outputImages[timeBar.Value];
+                        outputPictureBox.Refresh();
+                    }
                     // 1000 / 33  -->  ~ 30 fps
                     Thread.Sleep(33);
                 }
@@ -152,6 +170,8 @@ namespace Codec
             progressBar.Visible = false;
 
             // TODO
+
+            YCbCrToRGB();
         }
 
         #region Helper Methods

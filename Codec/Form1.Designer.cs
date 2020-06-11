@@ -45,6 +45,8 @@
             this.colorAinput = new System.Windows.Forms.TextBox();
             this.colorBinput = new System.Windows.Forms.TextBox();
             this.colorCinput = new System.Windows.Forms.TextBox();
+            this.inputCheckBox = new System.Windows.Forms.CheckBox();
+            this.outputCheckBox = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.timeBar)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.outputPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.inputPictureBox)).BeginInit();
@@ -150,7 +152,7 @@
             // playButton
             // 
             this.playButton.Image = global::Codec.Properties.Resources.playButton1;
-            this.playButton.Location = new System.Drawing.Point(260, 280);
+            this.playButton.Location = new System.Drawing.Point(302, 280);
             this.playButton.Name = "playButton";
             this.playButton.Size = new System.Drawing.Size(143, 50);
             this.playButton.TabIndex = 12;
@@ -214,11 +216,35 @@
             this.colorCinput.Text = "2";
             this.colorCinput.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
+            // inputCheckBox
+            // 
+            this.inputCheckBox.AutoSize = true;
+            this.inputCheckBox.Checked = true;
+            this.inputCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.inputCheckBox.Location = new System.Drawing.Point(222, 284);
+            this.inputCheckBox.Name = "inputCheckBox";
+            this.inputCheckBox.Size = new System.Drawing.Size(72, 17);
+            this.inputCheckBox.TabIndex = 17;
+            this.inputCheckBox.Text = "Play input";
+            this.inputCheckBox.UseVisualStyleBackColor = true;
+            // 
+            // outputCheckBox
+            // 
+            this.outputCheckBox.AutoSize = true;
+            this.outputCheckBox.Location = new System.Drawing.Point(222, 308);
+            this.outputCheckBox.Name = "outputCheckBox";
+            this.outputCheckBox.Size = new System.Drawing.Size(79, 17);
+            this.outputCheckBox.TabIndex = 18;
+            this.outputCheckBox.Text = "Play output";
+            this.outputCheckBox.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(670, 591);
+            this.Controls.Add(this.outputCheckBox);
+            this.Controls.Add(this.inputCheckBox);
             this.Controls.Add(this.colorCinput);
             this.Controls.Add(this.colorBinput);
             this.Controls.Add(this.colorAinput);
@@ -265,6 +291,8 @@
         private System.Windows.Forms.TextBox colorAinput;
         private System.Windows.Forms.TextBox colorBinput;
         private System.Windows.Forms.TextBox colorCinput;
+        private System.Windows.Forms.CheckBox inputCheckBox;
+        private System.Windows.Forms.CheckBox outputCheckBox;
     }
 }
 

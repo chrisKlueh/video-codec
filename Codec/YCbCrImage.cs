@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Reflection;
 
 namespace Codec
 {
@@ -71,8 +72,17 @@ namespace Codec
             {
                 if (x % 2 != 0)
                 {
-                    double Cb = (pixels[x - 1, y].getCb() + pixels[x + 1, y].getCb()) / 2;
-                    double Cr = (pixels[x - 1, y].getCr() + pixels[x + 1, y].getCr()) / 2;
+                    double Cb;
+                    double Cr;
+                    if (x == width - 1)
+                    {
+                        Cb = pixels[x - 1, y].getCb();
+                        Cr = pixels[x - 1, y].getCr();
+                    } else
+                    {
+                        Cb = (pixels[x - 1, y].getCb() + pixels[x + 1, y].getCb()) / 2;
+                        Cr = (pixels[x - 1, y].getCr() + pixels[x + 1, y].getCr()) / 2;
+                    }
                     return new YCbCrPixel(pixels[x, y].getY(), Cb, Cr);
                 }
             }
