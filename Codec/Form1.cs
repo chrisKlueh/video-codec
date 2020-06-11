@@ -17,6 +17,7 @@ namespace Codec
         YCbCrImage[] tempImages;
 
         string outputFile = null;
+        Image[] outputImages;
 
         public Form1()
         {
@@ -77,7 +78,17 @@ namespace Codec
         {
             if(inputImages != null && timeBar.Value < inputImages.Length)
             {
-                inputPictureBox.Image = inputImages[timeBar.Value];
+                if(inputCheckBox.Checked)
+                {
+                    inputPictureBox.Image = inputImages[timeBar.Value];
+                }
+            }
+            if (outputImages != null && timeBar.Value < outputImages.Length)
+            {
+                if (outputCheckBox.Checked)
+                {
+                    outputPictureBox.Image = outputImages[timeBar.Value];
+                }
             }
         }
         
@@ -100,13 +111,21 @@ namespace Codec
         // play the video
         private void playButton_Click(object sender, EventArgs e)
         {
-            if (inputImages != null && timeBar.Value < inputImages.Length)
+            if ((inputCheckBox.Checked && (inputImages != null && timeBar.Value < inputImages.Length)) || (outputCheckBox.Checked && (outputImages != null && timeBar.Value < outputImages.Length)))
             {
                 while(timeBar.Value < inputImages.Length - 1)
                 {
                     timeBar.Value += 1;
-                    inputPictureBox.Image = inputImages[timeBar.Value];
-                    inputPictureBox.Refresh();
+                    if (inputCheckBox.Checked)
+                    {
+                        inputPictureBox.Image = inputImages[timeBar.Value];
+                        inputPictureBox.Refresh();
+                    }
+                    if (outputCheckBox.Checked)
+                    {
+                        outputPictureBox.Image = outputImages[timeBar.Value];
+                        outputPictureBox.Refresh();
+                    }
                     // 1000 / 33  -->  ~ 30 fps
                     Thread.Sleep(33);
                 }
@@ -117,24 +136,14 @@ namespace Codec
         private void convertButton_Click(object sender, EventArgs e)
         {
             // Convert RGB images to YCbCr images
-            tempImages = new YCbCrImage[inputImages.Length];
-            for (int i = 0; i < inputImages.Length; i++)
-            {
-                Bitmap bitmap = new Bitmap(inputImages[i]);
-                YCbCrImage yCbCrImage = new YCbCrImage(bitmap.Width, bitmap.Height);
-                for (int x = 0; x < bitmap.Width; x++)
-                {
-                    for (int y = 0; y < bitmap.Height; y++)
-                    {
-                        Color pixel = bitmap.GetPixel(x, y);
-                        double Y =  pixel.R * 0.299000 + pixel.G * 0.587000 + pixel.B * 0.114000;
-                        double Cb = pixel.R * -0.168736 + pixel.G * -0.331264 + pixel.B * 0.500000 + 128;
-                        double Cr = pixel.R * 0.500000 + pixel.G * -0.418688 + pixel.B * -0.081312 + 128;
-                        yCbCrImage.pixels[x, y] = new YCbCrPixel(Y, Cb, Cr);
-                    }
-                }
-                tempImages[i] = yCbCrImage;
-            }
+            RGBToYCbCr();
+
+            progressLabel.Text = "Chroma subsampling...";
+            progressLabel.Visible = true;
+            progressBar.Value = 0;
+            progressBar.Visible = true;
+            // needed to update UI
+            this.Update();
 
             // Color subsampling
             string subsamplingMode = "4:4:4";
@@ -151,9 +160,18 @@ namespace Codec
                     subsamplingMode = "4:2:0";
                 }
             }
-            tempImages = ColorSubsampler.GetSubSampledImages(inputImages, subsamplingMode);
+            for(int i = 0; i < tempImages.Length; i++)
+            {
+                tempImages[i].SetSubsamplingMode(subsamplingMode);
+                progressBar.Value = i;
+            }
+
+            progressLabel.Visible = false;
+            progressBar.Visible = false;
 
             // TODO
+
+            YCbCrToRGB();
         }
 
         #region Helper Methods
@@ -169,6 +187,76 @@ namespace Codec
             int place = Convert.ToInt32(Math.Floor(Math.Log(bytes, 1024)));
             double num = Math.Round(bytes / Math.Pow(1024, place), 1);
             return (Math.Sign(byteCount) * num).ToString() + suf[place];
+        }
+
+        private void RGBToYCbCr()
+        {
+            progressLabel.Text = "Converting rgb to ycbcr...";
+            progressLabel.Visible = true;
+            progressBar.Value = 0;
+            progressBar.Visible = true;
+            // needed to update UI
+            this.Update();
+
+            tempImages = new YCbCrImage[inputImages.Length];
+            for (int i = 0; i < inputImages.Length; i++)
+            {
+                Bitmap bitmap = new Bitmap(inputImages[i]);
+                YCbCrImage yCbCrImage = new YCbCrImage(bitmap.Width, bitmap.Height);
+                for (int x = 0; x < bitmap.Width; x++)
+                {
+                    for (int y = 0; y < bitmap.Height; y++)
+                    {
+                        Color pixel = bitmap.GetPixel(x, y);
+                        double Y = 0.2989 * pixel.R + 0.5866 * pixel.G + 0.1145 * pixel.B;
+                        double Cb = -0.1687 * pixel.R - 0.3313 * pixel.G + 0.5000 * pixel.B;
+                        double Cr = 0.5000 * pixel.R - 0.4184 * pixel.G - 0.0816 * pixel.B;
+                        yCbCrImage.pixels[x, y] = new YCbCrPixel(Y, Cb, Cr);
+                    }
+                }
+                tempImages[i] = yCbCrImage;
+                progressBar.Value = i;
+            }
+
+            progressLabel.Visible = false;
+            progressBar.Visible = false;
+            // needed to update UI
+            this.Update();
+        }
+
+        private void YCbCrToRGB()
+        {
+            progressLabel.Text = "Converting ycbcr to rgb...";
+            progressLabel.Visible = true;
+            progressBar.Value = 0;
+            progressBar.Visible = true;
+            // needed to update UI
+            this.Update();
+
+            outputImages = new Image[tempImages.Length];
+            for (int i = 0; i < tempImages.Length; i++)
+            {
+                Bitmap bitmap = new Bitmap(tempImages[i].width, tempImages[i].height);
+                for (int x = 0; x < tempImages[i].width; x++)
+                {
+                    for (int y = 0; y < tempImages[i].height; y++)
+                    {
+                        YCbCrPixel pixel = tempImages[i].GetPixel(x, y);
+                        int r = (int)Math.Max(0.0f, Math.Min(1.0f, (double)(pixel.getY() + 0.0000 * pixel.getCb() + 1.4022 * pixel.getCr())));
+                        int g = (int)Math.Max(0.0f, Math.Min(1.0f, (double)(pixel.getY() - 0.3456 * pixel.getCb() - 0.7145 * pixel.getCr())));
+                        int b = (int)Math.Max(0.0f, Math.Min(1.0f, (double)(pixel.getY() + 1.7710 * pixel.getCb() + 0.0000 * pixel.getCr())));
+                        Color color = Color.FromArgb(r, g, b);
+                        bitmap.SetPixel(x, y, color);
+                    }
+                }
+                outputImages[i] = bitmap;
+                progressBar.Value = i;
+            }
+
+            progressLabel.Visible = false;
+            progressBar.Visible = false;
+            // needed to update UI
+            this.Update();
         }
 
         #endregion
