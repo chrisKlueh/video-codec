@@ -1,4 +1,5 @@
 using System;
+using System.Security.Cryptography;
 
 namespace Codec
 {
@@ -16,12 +17,78 @@ namespace Codec
             this.image = image;
         }
 
+        //create a matrix containing only Y, Cb or Cr values
+        private double[,] FillValueMatrix(YCbCrImage image, String channelString)
+        {
+            double[,] valueMatrix = new double[image.width][image.height];
+            for (int height = 0; height < image.height; height++)
+            {  
+                for (int width = 0; width < image.width; width++)
+                {
+                    switch (channelString)
+                    {
+                        case "Y":
+                            valueMatrix[width][height] = image.GetPixel(width, height).getY();
+                            break;
+                        case "Cb":
+                            valueMatrix[width][height] = image.GetPixel(width, height).getCb();
+                            break;
+                        case "Cr":
+                            valueMatrix[width][height] = image.GetPixel(width, height).getCr();
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+            return valueMatrix;
+        }
+
+
+        private double[,] PadValueMatrix(double[,] valueMatrix)
+        {
+            //calculate the additional columns and rows the paddedValueMatrix needs to have a multiple of 8 columns and rows
+            paddingWidth = 8 - (valueMatrix.GetLength(0) % 8);
+            paddingHeight = 8 - (valueMatrix.GetLength(1) % 8);
+            
+            //create the new matrix
+            double[,] paddedValueMatrix = new double[valueMatrix.GetLength(0) + paddingWidth][valueMatrix.GetLength(1) + paddingHeight];
+            
+            for (int height = 0; height < paddedValueMatrix.height; height++)
+            {
+                for (int width = 0; width < paddedValueMatrix.width; width++)
+                {
+                    double value;
+                    //fill paddedValueMatrix with all values of valueMatrix
+                    if (width < valueMatrix.GetLength(1) && height < valueMatrix.GetLength(1))
+                    {
+                        value = valueMatrix[width][height];
+                    } 
+                    //fill the rest of paddedValueMatrix with 0.0 values
+                    else
+                    {
+                        value = 0.0;
+                    }
+                    paddedValueMatrix[width][height] = value;
+                }
+            }
+            return paddedValueMatrix;
+        }
+        
         // https://www.geeksforgeeks.org/discrete-cosine-transform-algorithm-program/
         // Function to find discrete cosine transform
-        public int[][] PerformDct()
+        public double[][] PerformDct()
         {
-            //1.
             
+            double[,] valueMatrixY = FillValueMatrix(image, "Y");
+            double[,] valueMatrixCb = FillValueMatrix(image, "Cb");
+            double[,] valueMatrixCr = FillValueMatrix(image, "Cr");
+
+            valueMatrixY = PadValueMatrix(valueMatrixY);
+            valueMatrixCb = PadValueMatrix(valueMatrixCb);
+            valueMatrixCr = PadValueMatrix(valueMatrixCr);
+
+
             int i, j, k, l;
          
             // dct will store the discrete cosine transform 
