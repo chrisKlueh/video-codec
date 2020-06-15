@@ -48,7 +48,7 @@ public class ZickZack
             for (int j = 0; j < blockSize; j++)
             {
                 int indexInBlock = zickZackMapping8[j][i] - 1;
-                result[offsetForBlock + indexInBlock] = matrix[y + j,x + i];
+                result[offsetForBlock + indexInBlock] = matrix[x + j,y + i];
             }
         }
     }
@@ -93,7 +93,7 @@ public class ZickZack
         {
             int y_offset = ReverseZickZackMapping8[i,0];
             int x_offset = ReverseZickZackMapping8[i,1];
-            result[y + y_offset,x + x_offset] = data[offsetInArr + i];
+            result[x + x_offset, y + y_offset] = data[offsetInArr + i];
         }
     }
 }

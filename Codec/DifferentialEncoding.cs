@@ -14,8 +14,8 @@ public class DifferentialEncoding
         {
             for (int x = 0; x < xLenght; x += blockSize)
             {
-                tempD = matrix[y,x];
-                matrix[y,x] -= d;
+                tempD = matrix[x,y];
+                matrix[x,y] -= d;
                 d = tempD;
             }
         }
@@ -36,8 +36,8 @@ public class DifferentialEncoding
         {
             for (int x = 0; x < xLenght; x += blockSize)
             {
-                matrix[y,x] += d;
-                d = matrix[y,x];
+                matrix[x,y] += d;
+                d = matrix[x,y];
             }
         }
 

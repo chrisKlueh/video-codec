@@ -171,14 +171,10 @@ namespace Codec
 
             // TODO
 
-            YCbCrToRGB();
+           // YCbCrToRGB();
 
-           int[,] test = new int[,] {
-              { 1, 3, 5, 5, 9, 7, 7, 7}, { 1, 3, 5, 5, 9, 7, 7, 7}, { 10, 3, 5, 5, 9, 7, 7, 7}, { 10, 3, 5, 5, 9, 7, 7, 7},
-              { 20, 3, 5, 5, 9, 7, 7, 7}, { 20, 3, 5, 5, 9, 7, 7, 7}, { 20, 3, 5, 5, 9, 7, 7, 7}, { 20, 3, 5, 5, 9, 7, 7, 7}
-           };
-
-           int[,] dE = DifferentialEncoding.Encode(test, 8);
+            //DCT & Quantization & Differential Encoding & Run Lenght Encoding
+            Encoding();
 
         }
 
@@ -288,6 +284,42 @@ namespace Codec
                 validValue = value;
             }
         }
+
+        private void Encoding()
+        {
+            progressLabel.Text = "Encoding...";
+            progressLabel.Visible = true;
+            progressBar.Value = 0;
+            progressBar.Visible = true;
+            // needed to update UI
+            this.Update();
+            int[,] yDctQuan, cBDctQuan, cRDctQuan, yDiffEncoded, cBDiffEncoded, cRDiffEncoded;
+            int[] yRunLenEncoded, cBRunLenEncoded, cRunLenEncoded;
+
+            for (int i = 0; i < tempImages.Length; i++)
+            {
+                DctImage dctImage = new DctImage(tempImages[i]);
+                yDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Y");
+                cBDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cb");
+                cRDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cr");
+
+                yDiffEncoded = DifferentialEncoding.Encode(yDctQuan, 8);
+                cBDiffEncoded = DifferentialEncoding.Encode(cBDctQuan, 8);
+                cRDiffEncoded = DifferentialEncoding.Encode(cRDctQuan, 8);
+
+                yRunLenEncoded = RunLengthEncode.Encode(yDiffEncoded, 8);
+                cBRunLenEncoded = RunLengthEncode.Encode(cBDiffEncoded, 8);
+                cRunLenEncoded = RunLengthEncode.Encode(cRDiffEncoded, 8);
+
+                progressBar.Value = i;
+            }
+
+            progressLabel.Visible = false;
+            progressBar.Visible = false;
+            // needed to update UI
+            this.Update();
+        }
+
 
         #endregion
     }
