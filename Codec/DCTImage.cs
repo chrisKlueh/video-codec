@@ -161,18 +161,18 @@ namespace Codec
             return dct;
         }
 
-        private double[,] Quantization(double[,] subArray)
+        private int[,] Quantization(double[,] subArray)
         {
             int width = subArray.GetLength(1);
             int height = subArray.GetLength(0);
 
 
-            double[,] quantizedMatrix = new double[height, width];
+            int[,] quantizedMatrix = new int[height, width];
             for (int i = 0; i < height; i++)
             {
                 for (int j = 0; j < width; j++)
                 {
-                    quantizedMatrix[i, j] = Math.Round(subArray[i, j] / (double)this.quantizationMatrix[i, j]);
+                    quantizedMatrix[i, j] = (int) Math.Round(subArray[i, j] / (double)this.quantizationMatrix[i, j]);
                 }
             }
             return quantizedMatrix;
