@@ -16,7 +16,40 @@ namespace Codec
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+           // Application.Run(new Form1());
+            int[][] test =
+            {
+                new int[] { 1, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 1, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 1, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 1, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 1, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 1, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 1, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 1, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 10, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 10, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 10, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 10, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 10, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 10, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 10, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 10, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 20, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 20, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 20, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 20, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 20, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 20, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 20, 3, 5, 5, 9, 7, 7, 7},
+                new int[] { 20, 3, 5, 5, 9, 7, 7, 7},
+
+            };
+            int[][] dE = DifferentialEncoding.Run(test, 8);
+            
+            int[][] dD = DifferentialDecoding.Run(dE, 8);
+            int[] result = RunLengthEncode.Run(dE, 8);
+
         }
     }
 }
