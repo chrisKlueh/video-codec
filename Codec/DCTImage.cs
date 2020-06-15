@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Security.Cryptography;
 
-namespace ConsoleApp1
+namespace Codec
 {
     class DctImage
     {
