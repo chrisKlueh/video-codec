@@ -79,9 +79,9 @@ namespace Codec
         }
 
 
-        private double[,] DctSubArray(double[,] valueMatrix)
+        private int[,] DctSubArray(double[,] valueMatrix)
         {
-            double[,] resultMatrix = new double[valueMatrix.GetLength(0), valueMatrix.GetLength(1)];
+            int[,] resultMatrix = new int[valueMatrix.GetLength(0), valueMatrix.GetLength(1)];
             //iterate the valueMatrix in 8x8 blocks
             for (int width = 0; width <= valueMatrix.GetLength(1) - 8; width += 8)
             {
@@ -105,7 +105,7 @@ namespace Codec
                     {
                         for (int subArrayX = 0; subArrayX < 8; subArrayX++)
                         {
-                            resultMatrix[height + subArrayY, width + subArrayX] = subArray[subArrayY, subArrayX];
+                            resultMatrix[height + subArrayY, width + subArrayX] = (int) subArray[subArrayY, subArrayX];
                         }
                     }
                 }
@@ -161,25 +161,25 @@ namespace Codec
             return dct;
         }
 
-        private int[,] Quantization(double[,] subArray)
+        private double[,] Quantization(double[,] subArray)
         {
             int width = subArray.GetLength(1);
             int height = subArray.GetLength(0);
 
 
-            int[,] quantizedMatrix = new int[height, width];
+            double[,] quantizedMatrix = new double[height, width];
             for (int i = 0; i < height; i++)
             {
                 for (int j = 0; j < width; j++)
                 {
-                    quantizedMatrix[i, j] = (int) Math.Round(subArray[i, j] / (double)this.quantizationMatrix[i, j]);
+                    quantizedMatrix[i, j] = Math.Round(subArray[i, j] / (double)this.quantizationMatrix[i, j]);
                 }
             }
             return quantizedMatrix;
         }
 
 
-        public double[,] PerformDctAndQuantization(YCbCrImage image, String channelString)
+        public int[,] PerformDctAndQuantization(YCbCrImage image, String channelString)
         {
             YCbCrImage result = new YCbCrImage(image.width, image.height);
 
@@ -191,18 +191,14 @@ namespace Codec
             valueMatrixCb = PadValueMatrix(valueMatrixCb);
             valueMatrixCr = PadValueMatrix(valueMatrixCr);
 
-            valueMatrixY = DctSubArray(valueMatrixY);
-            valueMatrixCb = DctSubArray(valueMatrixCb);
-            valueMatrixCr = DctSubArray(valueMatrixCr);
-
             switch (channelString)
             {
                 case "Y":
-                    return valueMatrixY;
+                    return DctSubArray(valueMatrixY);
                 case "Cb":
-                    return valueMatrixCb;
+                    return DctSubArray(valueMatrixCb);
                 case "Cr":
-                    return valueMatrixCr;
+                    return DctSubArray(valueMatrixCr);
                 default:
                     return null;
             }
