@@ -16,39 +16,20 @@ namespace Codec
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-           // Application.Run(new Form1());
-            int[][] test =
-            {
-                new int[] { 1, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 1, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 1, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 1, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 1, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 1, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 1, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 1, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 10, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 10, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 10, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 10, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 10, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 10, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 10, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 10, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 20, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 20, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 20, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 20, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 20, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 20, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 20, 3, 5, 5, 9, 7, 7, 7},
-                new int[] { 20, 3, 5, 5, 9, 7, 7, 7},
+            //Application.Run(new Form1());
 
-            };
-            int[][] dE = DifferentialEncoding.Run(test, 8);
+            int[,] test = new int[,] {
+              { 1, 3, 5, 5, 9, 7, 7, 7}, { 1, 3, 5, 5, 9, 7, 7, 7}, { 10, 3, 5, 5, 9, 7, 7, 7}, { 10, 3, 5, 5, 9, 7, 7, 7},
+              { 20, 3, 5, 5, 9, 7, 7, 7}, { 20, 3, 5, 5, 9, 7, 7, 7}, { 20, 3, 5, 5, 9, 7, 7, 7}, { 20, 3, 5, 5, 9, 7, 7, 7}
+           };
+
+            int[,] dE = DifferentialEncoding.Encode(test, 4);
+      
+            int[] rLE = RunLengthEncode.Encode(dE, 8);
+
+            int[,] rLED = RunLengthEncode.Decode(rLE, 8);
+            int a = 0;
             
-            int[][] dD = DifferentialDecoding.Run(dE, 8);
-            int[] result = RunLengthEncode.Run(dE, 8);
 
         }
     }

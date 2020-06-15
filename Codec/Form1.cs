@@ -172,6 +172,14 @@ namespace Codec
             // TODO
 
             YCbCrToRGB();
+
+           int[,] test = new int[,] {
+              { 1, 3, 5, 5, 9, 7, 7, 7}, { 1, 3, 5, 5, 9, 7, 7, 7}, { 10, 3, 5, 5, 9, 7, 7, 7}, { 10, 3, 5, 5, 9, 7, 7, 7},
+              { 20, 3, 5, 5, 9, 7, 7, 7}, { 20, 3, 5, 5, 9, 7, 7, 7}, { 20, 3, 5, 5, 9, 7, 7, 7}, { 20, 3, 5, 5, 9, 7, 7, 7}
+           };
+
+           int[,] dE = DifferentialEncoding.Encode(test, 8);
+
         }
 
         #region Helper Methods

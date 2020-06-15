@@ -13,15 +13,15 @@ public class ZickZack
           new int[] {22, 35, 38, 48, 51, 57, 60, 62},
           new int[] {36, 37, 49, 50, 58, 59, 63, 64}};
 
-    public static int[] ToArray(int[][] matrix, int blockSize)
+    public static int[] ToArray(int[,] matrix, int blockSize)
     {
         if (blockSize != 8)
         {
             return null;
         }
 
-        int yLenght = matrix[0].Length;
-        int xLenght = matrix.Length;
+        int xLenght = matrix.GetLength(0);
+        int yLenght = matrix.GetLength(1);
 
         int[] result = new int[xLenght * yLenght];
 
@@ -40,17 +40,15 @@ public class ZickZack
         return result;
     }
 
-    private static void Parse(int[][] matrix, int y, int x, int blockSize, int offsetForBlock, int[] result)
+    private static void Parse(int[,] matrix, int y, int x, int blockSize, int offsetForBlock, int[] result)
     {
-        int rows = y;
-        int columns = x;
-
-        for (int i = 0; x < blockSize; x++)
+  
+        for (int i = 0; i < blockSize; i++)
         {
-            for (int j = 0; y < blockSize; y++)
+            for (int j = 0; j < blockSize; j++)
             {
                 int indexInBlock = zickZackMapping8[j][i] - 1;
-                result[offsetForBlock + indexInBlock] = matrix[y + j][x + i];
+                result[offsetForBlock + indexInBlock] = matrix[y + j,x + i];
             }
         }
     }
