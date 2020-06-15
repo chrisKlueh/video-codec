@@ -18,14 +18,12 @@
 .packages/
 
 # Build results
-[Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
 x64/
 x86/
 bld/
-[Bb]in/
 [Oo]bj/
 [Ll]og/
 
@@ -371,4 +369,6 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
-![Bb]in/[Dd]ebug/akiyo.y4m
+# We want to push the test video
+[Bb]in/*
+![Bb]in/[Dd]ebug/

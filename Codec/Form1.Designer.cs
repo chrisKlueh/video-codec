@@ -31,11 +31,22 @@
             this.inputSizeLabel = new System.Windows.Forms.Label();
             this.outputSizeLabel = new System.Windows.Forms.Label();
             this.timeBar = new System.Windows.Forms.TrackBar();
-            this.outputPictureBox = new System.Windows.Forms.PictureBox();
-            this.inputPictureBox = new System.Windows.Forms.PictureBox();
             this.convertButton = new System.Windows.Forms.Button();
             this.progressBar = new System.Windows.Forms.ProgressBar();
             this.progressLabel = new System.Windows.Forms.Label();
+            this.keyFrameInput = new System.Windows.Forms.TextBox();
+            this.keyFrameLabel1 = new System.Windows.Forms.Label();
+            this.keyFrameLabel2 = new System.Windows.Forms.Label();
+            this.keyFrameSaveButton = new System.Windows.Forms.Button();
+            this.playButton = new System.Windows.Forms.Button();
+            this.outputPictureBox = new System.Windows.Forms.PictureBox();
+            this.inputPictureBox = new System.Windows.Forms.PictureBox();
+            this.ColorSubSamplingLabel = new System.Windows.Forms.Label();
+            this.colorAinput = new System.Windows.Forms.TextBox();
+            this.colorBinput = new System.Windows.Forms.TextBox();
+            this.colorCinput = new System.Windows.Forms.TextBox();
+            this.inputCheckBox = new System.Windows.Forms.CheckBox();
+            this.outputCheckBox = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.timeBar)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.outputPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.inputPictureBox)).BeginInit();
@@ -61,13 +72,92 @@
             // 
             // timeBar
             // 
-            this.timeBar.Location = new System.Drawing.Point(12, 281);
+            this.timeBar.LargeChange = 30;
+            this.timeBar.Location = new System.Drawing.Point(15, 333);
+            this.timeBar.Margin = new System.Windows.Forms.Padding(0);
             this.timeBar.Maximum = 299;
             this.timeBar.Name = "timeBar";
             this.timeBar.Size = new System.Drawing.Size(646, 45);
+            this.timeBar.SmallChange = 30;
             this.timeBar.TabIndex = 4;
-            this.timeBar.TickFrequency = 5;
+            this.timeBar.TickFrequency = 30;
             this.timeBar.ValueChanged += new System.EventHandler(this.timeBar_ValueChanged);
+            // 
+            // convertButton
+            // 
+            this.convertButton.Location = new System.Drawing.Point(252, 500);
+            this.convertButton.Name = "convertButton";
+            this.convertButton.Size = new System.Drawing.Size(152, 33);
+            this.convertButton.TabIndex = 5;
+            this.convertButton.Text = "Convert video";
+            this.convertButton.UseVisualStyleBackColor = true;
+            this.convertButton.Click += new System.EventHandler(this.convertButton_Click);
+            // 
+            // progressBar
+            // 
+            this.progressBar.Location = new System.Drawing.Point(12, 562);
+            this.progressBar.Maximum = 300;
+            this.progressBar.Name = "progressBar";
+            this.progressBar.Size = new System.Drawing.Size(646, 23);
+            this.progressBar.TabIndex = 6;
+            this.progressBar.Visible = false;
+            // 
+            // progressLabel
+            // 
+            this.progressLabel.AutoSize = true;
+            this.progressLabel.Location = new System.Drawing.Point(12, 543);
+            this.progressLabel.Name = "progressLabel";
+            this.progressLabel.Size = new System.Drawing.Size(53, 13);
+            this.progressLabel.TabIndex = 7;
+            this.progressLabel.Text = "working...";
+            this.progressLabel.Visible = false;
+            // 
+            // keyFrameInput
+            // 
+            this.keyFrameInput.Location = new System.Drawing.Point(101, 426);
+            this.keyFrameInput.Name = "keyFrameInput";
+            this.keyFrameInput.Size = new System.Drawing.Size(33, 20);
+            this.keyFrameInput.TabIndex = 8;
+            this.keyFrameInput.Text = "30";
+            this.keyFrameInput.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // keyFrameLabel1
+            // 
+            this.keyFrameLabel1.AutoSize = true;
+            this.keyFrameLabel1.Location = new System.Drawing.Point(12, 429);
+            this.keyFrameLabel1.Name = "keyFrameLabel1";
+            this.keyFrameLabel1.Size = new System.Drawing.Size(83, 13);
+            this.keyFrameLabel1.TabIndex = 9;
+            this.keyFrameLabel1.Text = "Key frame every";
+            // 
+            // keyFrameLabel2
+            // 
+            this.keyFrameLabel2.AutoSize = true;
+            this.keyFrameLabel2.Location = new System.Drawing.Point(140, 429);
+            this.keyFrameLabel2.Name = "keyFrameLabel2";
+            this.keyFrameLabel2.Size = new System.Drawing.Size(38, 13);
+            this.keyFrameLabel2.TabIndex = 10;
+            this.keyFrameLabel2.Text = "frames";
+            // 
+            // keyFrameSaveButton
+            // 
+            this.keyFrameSaveButton.Location = new System.Drawing.Point(184, 424);
+            this.keyFrameSaveButton.Name = "keyFrameSaveButton";
+            this.keyFrameSaveButton.Size = new System.Drawing.Size(75, 23);
+            this.keyFrameSaveButton.TabIndex = 11;
+            this.keyFrameSaveButton.Text = "save";
+            this.keyFrameSaveButton.UseVisualStyleBackColor = true;
+            this.keyFrameSaveButton.Click += new System.EventHandler(this.keyFrameSaveButton_Click);
+            // 
+            // playButton
+            // 
+            this.playButton.Image = global::Codec.Properties.Resources.playButton1;
+            this.playButton.Location = new System.Drawing.Point(302, 280);
+            this.playButton.Name = "playButton";
+            this.playButton.Size = new System.Drawing.Size(143, 50);
+            this.playButton.TabIndex = 12;
+            this.playButton.UseVisualStyleBackColor = true;
+            this.playButton.Click += new System.EventHandler(this.playButton_Click);
             // 
             // outputPictureBox
             // 
@@ -90,40 +180,80 @@
             this.inputPictureBox.TabStop = false;
             this.inputPictureBox.Click += new System.EventHandler(this.inputPictureBox_Click);
             // 
-            // convertButton
+            // ColorSubSamplingLabel
             // 
-            this.convertButton.Location = new System.Drawing.Point(252, 319);
-            this.convertButton.Name = "convertButton";
-            this.convertButton.Size = new System.Drawing.Size(152, 33);
-            this.convertButton.TabIndex = 5;
-            this.convertButton.Text = "Convert video";
-            this.convertButton.UseVisualStyleBackColor = true;
-            this.convertButton.Click += new System.EventHandler(this.convertButton_Click);
+            this.ColorSubSamplingLabel.AutoSize = true;
+            this.ColorSubSamplingLabel.Location = new System.Drawing.Point(12, 404);
+            this.ColorSubSamplingLabel.Name = "ColorSubSamplingLabel";
+            this.ColorSubSamplingLabel.Size = new System.Drawing.Size(92, 13);
+            this.ColorSubSamplingLabel.TabIndex = 13;
+            this.ColorSubSamplingLabel.Text = "Color subsampling";
             // 
-            // progressBar
+            // colorAinput
             // 
-            this.progressBar.Location = new System.Drawing.Point(12, 507);
-            this.progressBar.Maximum = 300;
-            this.progressBar.Name = "progressBar";
-            this.progressBar.Size = new System.Drawing.Size(646, 23);
-            this.progressBar.TabIndex = 6;
-            this.progressBar.Visible = false;
+            this.colorAinput.Location = new System.Drawing.Point(110, 401);
+            this.colorAinput.Name = "colorAinput";
+            this.colorAinput.Size = new System.Drawing.Size(24, 20);
+            this.colorAinput.TabIndex = 14;
+            this.colorAinput.Text = "4";
+            this.colorAinput.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
-            // progressLabel
+            // colorBinput
             // 
-            this.progressLabel.AutoSize = true;
-            this.progressLabel.Location = new System.Drawing.Point(12, 488);
-            this.progressLabel.Name = "progressLabel";
-            this.progressLabel.Size = new System.Drawing.Size(53, 13);
-            this.progressLabel.TabIndex = 7;
-            this.progressLabel.Text = "working...";
-            this.progressLabel.Visible = false;
+            this.colorBinput.Location = new System.Drawing.Point(140, 401);
+            this.colorBinput.Name = "colorBinput";
+            this.colorBinput.Size = new System.Drawing.Size(24, 20);
+            this.colorBinput.TabIndex = 15;
+            this.colorBinput.Text = "2";
+            this.colorBinput.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // colorCinput
+            // 
+            this.colorCinput.Location = new System.Drawing.Point(170, 401);
+            this.colorCinput.Name = "colorCinput";
+            this.colorCinput.Size = new System.Drawing.Size(24, 20);
+            this.colorCinput.TabIndex = 16;
+            this.colorCinput.Text = "2";
+            this.colorCinput.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // inputCheckBox
+            // 
+            this.inputCheckBox.AutoSize = true;
+            this.inputCheckBox.Checked = true;
+            this.inputCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.inputCheckBox.Location = new System.Drawing.Point(222, 284);
+            this.inputCheckBox.Name = "inputCheckBox";
+            this.inputCheckBox.Size = new System.Drawing.Size(72, 17);
+            this.inputCheckBox.TabIndex = 17;
+            this.inputCheckBox.Text = "Play input";
+            this.inputCheckBox.UseVisualStyleBackColor = true;
+            // 
+            // outputCheckBox
+            // 
+            this.outputCheckBox.AutoSize = true;
+            this.outputCheckBox.Location = new System.Drawing.Point(222, 308);
+            this.outputCheckBox.Name = "outputCheckBox";
+            this.outputCheckBox.Size = new System.Drawing.Size(79, 17);
+            this.outputCheckBox.TabIndex = 18;
+            this.outputCheckBox.Text = "Play output";
+            this.outputCheckBox.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(670, 542);
+            this.ClientSize = new System.Drawing.Size(670, 591);
+            this.Controls.Add(this.outputCheckBox);
+            this.Controls.Add(this.inputCheckBox);
+            this.Controls.Add(this.colorCinput);
+            this.Controls.Add(this.colorBinput);
+            this.Controls.Add(this.colorAinput);
+            this.Controls.Add(this.ColorSubSamplingLabel);
+            this.Controls.Add(this.playButton);
+            this.Controls.Add(this.keyFrameSaveButton);
+            this.Controls.Add(this.keyFrameLabel2);
+            this.Controls.Add(this.keyFrameLabel1);
+            this.Controls.Add(this.keyFrameInput);
             this.Controls.Add(this.progressLabel);
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.convertButton);
@@ -152,6 +282,17 @@
         private System.Windows.Forms.Button convertButton;
         private System.Windows.Forms.ProgressBar progressBar;
         private System.Windows.Forms.Label progressLabel;
+        private System.Windows.Forms.TextBox keyFrameInput;
+        private System.Windows.Forms.Label keyFrameLabel1;
+        private System.Windows.Forms.Label keyFrameLabel2;
+        private System.Windows.Forms.Button keyFrameSaveButton;
+        private System.Windows.Forms.Button playButton;
+        private System.Windows.Forms.Label ColorSubSamplingLabel;
+        private System.Windows.Forms.TextBox colorAinput;
+        private System.Windows.Forms.TextBox colorBinput;
+        private System.Windows.Forms.TextBox colorCinput;
+        private System.Windows.Forms.CheckBox inputCheckBox;
+        private System.Windows.Forms.CheckBox outputCheckBox;
     }
 }
 
