@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Security.Cryptography;
 
-namespace ConsoleApp1
+namespace Codec
 {
     class DctImage
     {
-        //public int width { get; private set; }
-        //public int height { get; private set; }
-        public YCbCrImage image;
-        public static int m = 8, n = 8;
+        private YCbCrImage image;
         private int[,] quantizationMatrix = new int[8, 8] {
             { 16, 11, 10, 16, 24, 40, 51, 61 },
             { 12, 12, 14, 19, 26, 58, 60, 55 },
@@ -21,13 +18,11 @@ namespace ConsoleApp1
 
         public DctImage(YCbCrImage image)
         {
-            //this.width = image.height.Get();
-            //this.height = image.height.get;
             this.image = image;
         }
 
         //create a matrix containing only Y, Cb or Cr values
-        public double[,] FillValueMatrix(YCbCrImage image, String channelString)
+        private double[,] FillValueMatrix(YCbCrImage image, String channelString)
         {
             double[,] valueMatrix = new double[image.width, image.height];
             for (int height = 0; height < image.height; height++)
@@ -58,7 +53,7 @@ namespace ConsoleApp1
         }
 
 
-        public double[,] PadValueMatrix(double[,] valueMatrix)
+        private double[,] PadValueMatrix(double[,] valueMatrix)
         {
             //calculate the additional columns and rows the paddedValueMatrix needs to have a multiple of 8 columns and rows
             int paddingHeight = 8 - (valueMatrix.GetLength(0) % 8);
@@ -85,38 +80,7 @@ namespace ConsoleApp1
         }
 
 
-        public YCbCrImage PerformDct(YCbCrImage image)
-        {
-            YCbCrImage result = new YCbCrImage(image.width, image.height);
-
-            double[,] valueMatrixY = FillValueMatrix(image, "Y");
-            double[,] valueMatrixCb = FillValueMatrix(image, "Cb");
-            double[,] valueMatrixCr = FillValueMatrix(image, "Cr");
-
-            valueMatrixY = PadValueMatrix(valueMatrixY);
-            valueMatrixCb = PadValueMatrix(valueMatrixCb);
-            valueMatrixCr = PadValueMatrix(valueMatrixCr);
-
-            valueMatrixY = DctSubArray(valueMatrixY);
-            valueMatrixCb = DctSubArray(valueMatrixCb);
-            valueMatrixCr = DctSubArray(valueMatrixCr);
-
-            for (int width = 0; width < image.width; width++)
-
-            {
-                for (int height = 0; height < image.height; height++)
-                {
-                    double Y = valueMatrixY[height, width];
-                    double Cb = valueMatrixCb[height, width];
-                    double Cr = valueMatrixCr[height, width];
-                    result.pixels[height, width] = new YCbCrPixel(Y, Cb, Cr);
-                }
-            }
-
-            return result;
-        }
-
-        public double[,] DctSubArray(double[,] valueMatrix)
+        private double[,] DctSubArray(double[,] valueMatrix)
         {
             double[,] resultMatrix = new double[valueMatrix.GetLength(0), valueMatrix.GetLength(1)];
             //iterate the valueMatrix in 8x8 blocks
@@ -136,8 +100,7 @@ namespace ConsoleApp1
                     }
                     //perform Dct on subArray
                     subArray = Dct(subArray);
-                    //subArray = Quantization(subArray);
-
+                    subArray = Quantization(subArray);
                     //fill corresponding block of resultMatrix with the values of subArray
                     for (int subArrayY = 0; subArrayY < 8; subArrayY++)
                     {
@@ -148,30 +111,14 @@ namespace ConsoleApp1
                     }
                 }
             }
-            //return the fully transformed resultMatrix
+            //return the fully transformed and quantized resultMatrix
             return resultMatrix;
         }
-
-        /*
-        //mock Dct algorithm for testing purposes
-        public double[,] Dct(double[,] subArray)
-        {
-            double[,] resultArray = new double[subArray.GetLength(0), subArray.GetLength(1)];
-            for (int subArrayY = 0; subArrayY < subArray.GetLength(0); subArrayY++)
-            {
-                for (int subArrayX = 0; subArrayX < subArray.GetLength(1); subArrayX++)
-                {
-                    resultArray[subArrayX, subArrayY] = subArray[subArrayX, subArrayY] + 1;
-                }
-            }
-            return resultArray;
-        }
-        */
 
 
         // https://www.geeksforgeeks.org/discrete-cosine-transform-algorithm-program/
         // Function to find discrete cosine transform
-        public double[,] Dct(double[,] subArray)
+        private double[,] Dct(double[,] subArray)
         {
             int i, j, k, l;
             int width = subArray.GetLength(1);
@@ -203,7 +150,7 @@ namespace ConsoleApp1
                     sum = 0;
                     for (k = 0; k < height; k++)
                     {
-                        for (l = 0; l < n; l++)
+                        for (l = 0; l < width; l++)
                         {
                             dct1 = subArray[k, l] * Math.Cos((2 * k + 1) * i * Math.PI / (2 * height)) * Math.Cos((2 * l + 1) * j * Math.PI / (2 * width));
                             sum = sum + dct1;
@@ -215,7 +162,7 @@ namespace ConsoleApp1
             return dct;
         }
 
-        public double[,] Quantization(double[,] subArray)
+        private double[,] Quantization(double[,] subArray)
         {
             int width = subArray.GetLength(1);
             int height = subArray.GetLength(0);
@@ -230,6 +177,36 @@ namespace ConsoleApp1
                 }
             }
             return quantizedMatrix;
+        }
+
+
+        public double[,] PerformDctAndQuantization(YCbCrImage image, String channelString)
+        {
+            YCbCrImage result = new YCbCrImage(image.width, image.height);
+
+            double[,] valueMatrixY = FillValueMatrix(image, "Y");
+            double[,] valueMatrixCb = FillValueMatrix(image, "Cb");
+            double[,] valueMatrixCr = FillValueMatrix(image, "Cr");
+
+            valueMatrixY = PadValueMatrix(valueMatrixY);
+            valueMatrixCb = PadValueMatrix(valueMatrixCb);
+            valueMatrixCr = PadValueMatrix(valueMatrixCr);
+
+            valueMatrixY = DctSubArray(valueMatrixY);
+            valueMatrixCb = DctSubArray(valueMatrixCb);
+            valueMatrixCr = DctSubArray(valueMatrixCr);
+
+            switch (channelString)
+            {
+                case "Y":
+                    return valueMatrixY;
+                case "Cb":
+                    return valueMatrixCb;
+                case "Cr":
+                    return valueMatrixCr;
+                default:
+                    return null;
+            }
         }
     }
 }
