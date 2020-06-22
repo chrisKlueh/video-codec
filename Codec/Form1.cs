@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -15,6 +17,10 @@ namespace Codec
         Image[] inputImages;
 
         YCbCrImage[] tempImages;
+
+        BitArray[] YBitArray;
+        BitArray[] CbBitArray;
+        BitArray[] CrBitArray;
 
         string outputFile = null;
         Image[] outputImages;
@@ -70,6 +76,11 @@ namespace Codec
                 inputPictureBox.Image = inputImages[timeBar.Value];
                 progressLabel.Visible = false;
                 progressBar.Visible = false;
+
+                // prepare bit arrays
+                YBitArray = new BitArray[inputImages.Length];
+                CbBitArray = new BitArray[inputImages.Length];
+                CrBitArray = new BitArray[inputImages.Length];
             }
         }
 
@@ -175,6 +186,8 @@ namespace Codec
 
             //DCT & Quantization & Differential Encoding & Run Lenght Encoding
             Encoding();
+
+            // Save our video file
 
         }
 
@@ -293,8 +306,9 @@ namespace Codec
             progressBar.Visible = true;
             // needed to update UI
             this.Update();
+
             int[,] yDctQuan, cBDctQuan, cRDctQuan, yDiffEncoded, cBDiffEncoded, cRDiffEncoded;
-            int[] yRunLenEncoded, cBRunLenEncoded, cRunLenEncoded;
+            int[] yRunLenEncoded, cBRunLenEncoded, cRRunLenEncoded;
 
             for (int i = 0; i < tempImages.Length; i++)
             {
@@ -309,7 +323,15 @@ namespace Codec
 
                 yRunLenEncoded = RunLengthEncode.Encode(yDiffEncoded, 8);
                 cBRunLenEncoded = RunLengthEncode.Encode(cBDiffEncoded, 8);
-                cRunLenEncoded = RunLengthEncode.Encode(cRDiffEncoded, 8);
+                cRRunLenEncoded = RunLengthEncode.Encode(cRDiffEncoded, 8);
+
+                // huffman encoding
+                YBitArray[i] = HuffmanEncoding(yRunLenEncoded);
+                CbBitArray[i] = HuffmanEncoding(cBRunLenEncoded);
+                CrBitArray[i] = HuffmanEncoding(cRRunLenEncoded);
+
+                // garbage collection
+                tempImages[i] = null;
 
                 progressBar.Value = i;
             }
@@ -320,6 +342,39 @@ namespace Codec
             this.Update();
         }
 
+        private BitArray HuffmanEncoding(int[] array)
+        {
+            string huffmanData = "";
+            IList<HuffmanNode> list = new List<HuffmanNode>();
+            for (int i = 0; i < array.Length; i++)
+            {
+                list.Add(new HuffmanNode("S" + (i + 1), array[i]));
+            }
+            Stack<HuffmanNode> stack = HuffmanNode.GetSortedStack(list);
+            while (stack.Count > 1)
+            {
+                HuffmanNode leftChild = stack.Pop();
+                HuffmanNode rightChild = stack.Pop();
+                HuffmanNode parentNode = new HuffmanNode(leftChild, rightChild);
+                stack.Push(parentNode);
+                stack = HuffmanNode.GetSortedStack(stack.ToList<HuffmanNode>());
+            }
+            HuffmanNode parentNode1 = stack.Pop();
+            HuffmanNode.GenerateCode(parentNode1, out huffmanData);
+
+            BitArray bitArray = new BitArray(huffmanData.Length);
+            for(int i = 0; i < huffmanData.Length; i++)
+            {
+                if(huffmanData[i].Equals("0"))
+                {
+                    bitArray[i] = false;
+                } else
+                {
+                    bitArray[i] = true;
+                }
+            }
+            return bitArray;
+        }
 
         #endregion
     }
