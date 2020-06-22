@@ -13,11 +13,11 @@ namespace Codec
         public int YLength;
         public int CbLength;
         public int CrLength;
-        public BitArray[] YBitArray;
-        public BitArray[] CbBitArray;
-        public BitArray[] CrBitArray;
+        public List<int>[] YBitArray;
+        public List<int>[] CbBitArray;
+        public List<int>[] CrBitArray;
 
-        public VideoFile(BitArray[] YBitArray, BitArray[] CbBitArray, BitArray[] CrBitArray)
+        public VideoFile(List<int>[] YBitArray, List<int>[] CbBitArray, List<int>[] CrBitArray)
         {
             this.YBitArray = YBitArray;
             this.CbBitArray = CbBitArray;

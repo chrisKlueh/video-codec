@@ -20,9 +20,9 @@ namespace Codec
 
         YCbCrImage[] tempImages;
 
-        BitArray[] YBitArray;
-        BitArray[] CbBitArray;
-        BitArray[] CrBitArray;
+        List<int>[] YBitArray;
+        List<int>[] CbBitArray;
+        List<int>[] CrBitArray;
 
         string outputFile = null;
         Image[] outputImages;
@@ -56,7 +56,8 @@ namespace Codec
                 var hasFrame = true;
                 var count = 0;
 
-                while (hasFrame == true)
+                // TODO: use full video?
+                while (hasFrame == true && count < 30)
                 {
                     using (MemoryStream stream = new MemoryStream())
                     {
@@ -79,10 +80,10 @@ namespace Codec
                 progressLabel.Visible = false;
                 progressBar.Visible = false;
 
-                // prepare bit arrays
-                YBitArray = new BitArray[inputImages.Length];
-                CbBitArray = new BitArray[inputImages.Length];
-                CrBitArray = new BitArray[inputImages.Length];
+                // init result array lengths
+                YBitArray = new List<int>[inputImages.Length];
+                CbBitArray = new List<int>[inputImages.Length];
+                CrBitArray = new List<int>[inputImages.Length];
             }
         }
 
@@ -332,9 +333,9 @@ namespace Codec
                 cRRunLenEncoded = RunLengthEncode.Encode(cRDiffEncoded, 8);
 
                 // huffman encoding
-                YBitArray[i] = HuffmanEncoding(yRunLenEncoded);
-                CbBitArray[i] = HuffmanEncoding(cBRunLenEncoded);
-                CrBitArray[i] = HuffmanEncoding(cRRunLenEncoded);
+                YBitArray[i] = (HuffmanEncoding(yRunLenEncoded));
+                CbBitArray[i] = (HuffmanEncoding(cBRunLenEncoded));
+                CrBitArray[i] = (HuffmanEncoding(cRRunLenEncoded));
 
                 // garbage collection
                 tempImages[i] = null;
@@ -348,38 +349,10 @@ namespace Codec
             this.Update();
         }
 
-        private BitArray HuffmanEncoding(int[] array)
+        private List<int> HuffmanEncoding(int[] array)
         {
-            string huffmanData = "";
-            IList<HuffmanNode> list = new List<HuffmanNode>();
-            for (int i = 0; i < array.Length; i++)
-            {
-                list.Add(new HuffmanNode("S" + (i + 1), array[i]));
-            }
-            Stack<HuffmanNode> stack = HuffmanNode.GetSortedStack(list);
-            while (stack.Count > 1)
-            {
-                HuffmanNode leftChild = stack.Pop();
-                HuffmanNode rightChild = stack.Pop();
-                HuffmanNode parentNode = new HuffmanNode(leftChild, rightChild);
-                stack.Push(parentNode);
-                stack = HuffmanNode.GetSortedStack(stack.ToList<HuffmanNode>());
-            }
-            HuffmanNode parentNode1 = stack.Pop();
-            HuffmanNode.GenerateCode(parentNode1, out huffmanData);
-
-            BitArray bitArray = new BitArray(huffmanData.Length);
-            for(int i = 0; i < huffmanData.Length; i++)
-            {
-                if(huffmanData[i].Equals("0"))
-                {
-                    bitArray[i] = false;
-                } else
-                {
-                    bitArray[i] = true;
-                }
-            }
-            return bitArray;
+            var huffman = new Huffman<int>(array);
+            return huffman.Encode(array);
         }
 
         #endregion
