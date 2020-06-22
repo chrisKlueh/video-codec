@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -11,10 +15,17 @@ namespace Codec
     {
         int keyFrameEvery = 30;
 
+        int width = 0;
+        int heigth = 0;
+
         string inputFileName = null;
         Image[] inputImages;
 
         YCbCrImage[] tempImages;
+
+        List<int>[] YBitArray;
+        List<int>[] CbBitArray;
+        List<int>[] CrBitArray;
 
         string outputFile = null;
         Image[] outputImages;
@@ -48,7 +59,8 @@ namespace Codec
                 var hasFrame = true;
                 var count = 0;
 
-                while (hasFrame == true)
+                // TODO: use full video?
+                while (hasFrame == true && count < 30)
                 {
                     using (MemoryStream stream = new MemoryStream())
                     {
@@ -70,6 +82,11 @@ namespace Codec
                 inputPictureBox.Image = inputImages[timeBar.Value];
                 progressLabel.Visible = false;
                 progressBar.Visible = false;
+
+                // init result array lengths
+                YBitArray = new List<int>[inputImages.Length];
+                CbBitArray = new List<int>[inputImages.Length];
+                CrBitArray = new List<int>[inputImages.Length];
             }
         }
 
@@ -169,16 +186,67 @@ namespace Codec
             progressLabel.Visible = false;
             progressBar.Visible = false;
 
-            // TODO
-
-            // YCbCrToRGB();
-
-            //DCT & Quantization & Differential Encoding & Run Lenght Encoding
+            //DCT & Quantization & Differential Encoding & Run Lenght Encoding & Huffman Encoding
             Encoding();
 
+            // Save our video file
+            VideoFile outputVideo = new VideoFile(width, heigth, toBitArrayArray(YBitArray), toBitArrayArray(CbBitArray), toBitArrayArray(CrBitArray));
+            IFormatter encodingFormatter = new BinaryFormatter();
+            Stream encodingStream = new FileStream("akyio.bfv", FileMode.Create, FileAccess.Write, FileShare.None);
+            encodingFormatter.Serialize(encodingStream, outputVideo);
+            encodingStream.Close();
+
+            ///////////////////////////////////////
+            /// Encoding done - file saved.
+            ///////////////////////////////////////
+            /// Start Decoding
+            ///////////////////////////////////////
+
+            // TODO
+
+            // read video file
+            IFormatter decodingFormatter = new BinaryFormatter();
+            Stream decodingStream = new FileStream("akyio.bfv", FileMode.Open, FileAccess.Read, FileShare.Read);
+            VideoFile inputVideo = (VideoFile)decodingFormatter.Deserialize(decodingStream);
+            decodingStream.Close();
+
+            //DCT & Quantization & Differential Decoding & Run Lenght Decoding & Huffman Decoding
+            Decoding(inputVideo);
+
+            // YCbCrToRGB();
         }
 
         #region Helper Methods
+
+        private BitArray[] toBitArrayArray(List<int>[] listArray)
+        {
+            BitArray[] bitArrayArray = new BitArray[listArray.Length];
+            for (int i = 0; i < listArray.Length; i++)
+            {
+                BitArray bitArray = new BitArray(listArray[i].Count);
+                for (int j = 0; j < listArray[i].Count; j++)
+                {
+                    bitArray[j] = Convert.ToBoolean(listArray[i][j]);
+                }
+                bitArrayArray[i] = bitArray;
+            }
+            return bitArrayArray;
+        }
+
+        private List<int>[] toIntListArray(BitArray[] bitArray)
+        {
+            List<int>[] listArray = new List<int>[bitArray.Length];
+            for (int i = 0; i < bitArray.Length; i++)
+            {
+                List<int> list = new List<int>();
+                for (int j = 0; j < bitArray[i].Length; j++)
+                {
+                    list.Add(Convert.ToInt32(bitArray[i]));
+                }
+                listArray[i] = list;
+            }
+            return listArray;
+        }
 
         // easy way to display filesize how we are used to see it
         // https://stackoverflow.com/questions/281640/how-do-i-get-a-human-readable-file-size-in-bytes-abbreviation-using-net
@@ -223,6 +291,11 @@ namespace Codec
                 tempImages[i] = yCbCrImage;
                 progressBar.Value = i;
             }
+
+            // we need this later to save in our video file
+            Bitmap tempbm = new Bitmap(inputImages[0]);
+            width = tempbm.Width;
+            heigth = tempbm.Height;
 
             progressLabel.Visible = false;
             progressBar.Visible = false;
@@ -293,8 +366,9 @@ namespace Codec
             progressBar.Visible = true;
             // needed to update UI
             this.Update();
+
             int[,] yDctQuan, cBDctQuan, cRDctQuan, yDiffEncoded, cBDiffEncoded, cRDiffEncoded;
-            int[] yRunLenEncoded, cBRunLenEncoded, cRunLenEncoded;
+            int[] yRunLenEncoded, cBRunLenEncoded, cRRunLenEncoded;
 
             for (int i = 0; i < tempImages.Length; i++)
             {
@@ -309,7 +383,15 @@ namespace Codec
 
                 yRunLenEncoded = RunLengthEncode.Encode(yDiffEncoded, 8);
                 cBRunLenEncoded = RunLengthEncode.Encode(cBDiffEncoded, 8);
-                cRunLenEncoded = RunLengthEncode.Encode(cRDiffEncoded, 8);
+                cRRunLenEncoded = RunLengthEncode.Encode(cRDiffEncoded, 8);
+
+                // huffman encoding
+                YBitArray[i] = (HuffmanEncoding(yRunLenEncoded));
+                CbBitArray[i] = (HuffmanEncoding(cBRunLenEncoded));
+                CrBitArray[i] = (HuffmanEncoding(cRRunLenEncoded));
+
+                // garbage collection
+                tempImages[i] = null;
 
                 progressBar.Value = i;
             }
@@ -320,6 +402,59 @@ namespace Codec
             this.Update();
         }
 
+        private void Decoding(VideoFile video)
+        {
+            progressLabel.Text = "Decoding...";
+            progressLabel.Visible = true;
+            progressBar.Value = 0;
+            progressBar.Visible = true;
+            // needed to update UI
+            this.Update();
+
+            int[,] yDctQuan, cBDctQuan, cRDctQuan, yDiffEncoded, cBDiffEncoded, cRDiffEncoded;
+            int[] yRunLenEncoded, cBRunLenEncoded, cRRunLenEncoded;
+
+            YBitArray = toIntListArray(video.YBitArray);
+            CbBitArray = toIntListArray(video.CbBitArray);
+            CrBitArray = toIntListArray(video.CrBitArray);
+
+            for (int i = 0; i < tempImages.Length; i++)
+            {
+                // huffman decoding
+                yRunLenEncoded = HuffmanDecoding(YBitArray[i]);
+                cBRunLenEncoded = HuffmanDecoding(CbBitArray[i]);
+                cRRunLenEncoded = HuffmanDecoding(CrBitArray[i]);
+
+                // run length decoding
+                yDiffEncoded = RunLengthEncode.Decode(yRunLenEncoded, 8);
+                cBDiffEncoded = RunLengthEncode.Decode(cBRunLenEncoded, 8);
+                cRDiffEncoded = RunLengthEncode.Decode(cRRunLenEncoded, 8);
+
+                // differential decoding
+                yDctQuan = DifferentialEncoding.Decode(yDiffEncoded, 8);
+                cBDctQuan = DifferentialEncoding.Decode(cBDiffEncoded, 8);
+                cRDctQuan = DifferentialEncoding.Decode(cRDiffEncoded, 8);
+
+                progressBar.Value = i;
+            }
+
+            progressLabel.Visible = false;
+            progressBar.Visible = false;
+            // needed to update UI
+            this.Update();
+        }
+
+        private List<int> HuffmanEncoding(int[] array)
+        {
+            var huffman = new Huffman<int>(array);
+            return huffman.Encode(array);
+        }
+
+        private int[] HuffmanDecoding(List<int> list)
+        {
+            var huffman = new Huffman<int>(list);
+            return huffman.Decode(list).ToArray();
+        }
 
         #endregion
     }
