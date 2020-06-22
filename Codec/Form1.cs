@@ -411,6 +411,7 @@ namespace Codec
             // needed to update UI
             this.Update();
 
+            int[,] yDctQuan, cBDctQuan, cRDctQuan, yDiffEncoded, cBDiffEncoded, cRDiffEncoded;
             int[] yRunLenEncoded, cBRunLenEncoded, cRRunLenEncoded;
 
             YBitArray = toIntListArray(video.YBitArray);
@@ -423,6 +424,16 @@ namespace Codec
                 yRunLenEncoded = HuffmanDecoding(YBitArray[i]);
                 cBRunLenEncoded = HuffmanDecoding(CbBitArray[i]);
                 cRRunLenEncoded = HuffmanDecoding(CrBitArray[i]);
+
+                // run length decoding
+                yDiffEncoded = RunLengthEncode.Decode(yRunLenEncoded, 8);
+                cBDiffEncoded = RunLengthEncode.Decode(cBRunLenEncoded, 8);
+                cRDiffEncoded = RunLengthEncode.Decode(cRRunLenEncoded, 8);
+
+                // differential decoding
+                yDctQuan = DifferentialEncoding.Decode(yDiffEncoded, 8);
+                cBDctQuan = DifferentialEncoding.Decode(cBDiffEncoded, 8);
+                cRDctQuan = DifferentialEncoding.Decode(cRDiffEncoded, 8);
 
                 progressBar.Value = i;
             }
