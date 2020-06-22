@@ -58,9 +58,11 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="HuffmanNode.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DifferentialEncoding.cs" />
+    <Compile Include="VideoFile.cs" />
     <Compile Include="ZickZack.cs" />
     <Compile Include="RunLengthEncode.cs" />
     <Compile Include="utils.cs" />

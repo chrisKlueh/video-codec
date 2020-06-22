@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -188,7 +190,11 @@ namespace Codec
             Encoding();
 
             // Save our video file
-
+            VideoFile video = new VideoFile(YBitArray, CbBitArray, CrBitArray);
+            IFormatter formatter = new BinaryFormatter();
+            Stream stream = new FileStream("akyio.bfv", FileMode.Create, FileAccess.Write, FileShare.None);
+            formatter.Serialize(stream, video);
+            stream.Close();
         }
 
         #region Helper Methods
