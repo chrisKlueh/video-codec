@@ -15,6 +15,9 @@ namespace Codec
     {
         int keyFrameEvery = 30;
 
+        int width = 0;
+        int heigth = 0;
+
         string inputFileName = null;
         Image[] inputImages;
 
@@ -183,22 +186,49 @@ namespace Codec
             progressLabel.Visible = false;
             progressBar.Visible = false;
 
-            // TODO
-
-            // YCbCrToRGB();
-
             //DCT & Quantization & Differential Encoding & Run Lenght Encoding
             Encoding();
 
             // Save our video file
-            VideoFile video = new VideoFile(YBitArray, CbBitArray, CrBitArray);
-            IFormatter formatter = new BinaryFormatter();
-            Stream stream = new FileStream("akyio.bfv", FileMode.Create, FileAccess.Write, FileShare.None);
-            formatter.Serialize(stream, video);
-            stream.Close();
+            VideoFile outputVideo = new VideoFile(width, heigth, toBitArray(YBitArray), toBitArray(CbBitArray), toBitArray(CrBitArray));
+            IFormatter encodingFormatter = new BinaryFormatter();
+            Stream encodingStream = new FileStream("akyio.bfv", FileMode.Create, FileAccess.Write, FileShare.None);
+            encodingFormatter.Serialize(encodingStream, outputVideo);
+            encodingStream.Close();
+
+            ///////////////////////////////////////
+            /// Encoding done - file saved.
+            ///////////////////////////////////////
+            /// Start Decoding
+            ///////////////////////////////////////
+
+            // TODO
+
+            // read video file
+            IFormatter decodingFormatter = new BinaryFormatter();
+            Stream decodingStream = new FileStream("akyio.bfv", FileMode.Open, FileAccess.Read, FileShare.Read);
+            VideoFile inputVideo = (VideoFile)decodingFormatter.Deserialize(decodingStream);
+            decodingStream.Close();
+
+            // YCbCrToRGB();
         }
 
         #region Helper Methods
+
+        private BitArray[] toBitArray(List<int>[] listArray)
+        {
+            BitArray[] bitArrayArray = new BitArray[listArray.Length];
+            for (int i = 0; i < listArray.Length; i++)
+            {
+                BitArray bitArray = new BitArray(listArray[i].Count);
+                for (int j = 0; j < listArray[i].Count; j++)
+                {
+                    bitArray[j] = Convert.ToBoolean(listArray[i][j]);
+                }
+                bitArrayArray[i] = bitArray;
+            }
+            return bitArrayArray;
+        }
 
         // easy way to display filesize how we are used to see it
         // https://stackoverflow.com/questions/281640/how-do-i-get-a-human-readable-file-size-in-bytes-abbreviation-using-net
@@ -243,6 +273,11 @@ namespace Codec
                 tempImages[i] = yCbCrImage;
                 progressBar.Value = i;
             }
+
+            // we need this later to save in our video file
+            Bitmap tempbm = new Bitmap(inputImages[0]);
+            width = tempbm.Width;
+            heigth = tempbm.Height;
 
             progressLabel.Visible = false;
             progressBar.Visible = false;

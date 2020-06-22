@@ -10,21 +10,19 @@ namespace Codec
     [Serializable]
     class VideoFile
     {
-        public int YLength;
-        public int CbLength;
-        public int CrLength;
-        public List<int>[] YBitArray;
-        public List<int>[] CbBitArray;
-        public List<int>[] CrBitArray;
+        public int width;
+        public int height;
+        public BitArray[] YBitArray;
+        public BitArray[] CbBitArray;
+        public BitArray[] CrBitArray;
 
-        public VideoFile(List<int>[] YBitArray, List<int>[] CbBitArray, List<int>[] CrBitArray)
+        public VideoFile(int width, int height,BitArray[] YBitArray, BitArray[] CbBitArray, BitArray[] CrBitArray)
         {
+            this.width = width;
+            this.height = height;
             this.YBitArray = YBitArray;
             this.CbBitArray = CbBitArray;
             this.CrBitArray = CrBitArray;
-            this.YLength = YBitArray.Length;
-            this.CbLength = CbBitArray.Length;
-            this.CrLength = CrBitArray.Length;
         }
     }
 }
