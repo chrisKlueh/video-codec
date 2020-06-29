@@ -30,6 +30,11 @@ namespace Codec
         };
         */
 
+        public DctImage()
+        {
+            this.image = null;
+        }
+
         public DctImage(YCbCrImage image)
         {
             this.image = image;
@@ -96,12 +101,12 @@ namespace Codec
 
         public int[,] TrimValueMatrix(int[,] valueMatrix, int width, int height)
         {
-            int[,] trimmedValueMatrix = new int[height, width];
+            int[,] trimmedValueMatrix = new int[width, height];
             for (int i = 0; i < height; i++)
             {
                 for (int j = 0; j < width; j++)
                 {
-                    trimmedValueMatrix[i, j] = valueMatrix[i, j];
+                    trimmedValueMatrix[j, i] = valueMatrix[j, i];
                 }
             }
             return trimmedValueMatrix;
@@ -227,8 +232,6 @@ namespace Codec
 
         public int[,] PerformDctAndQuantization(YCbCrImage image, String channelString)
         {
-            YCbCrImage result = new YCbCrImage(image.width, image.height);
-
             double[,] valueMatrixY = FillValueMatrix(image, "Y");
             double[,] valueMatrixCb = FillValueMatrix(image, "Cb");
             double[,] valueMatrixCr = FillValueMatrix(image, "Cr");

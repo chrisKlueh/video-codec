@@ -60,7 +60,7 @@ namespace Codec
                 var count = 0;
 
                 // TODO: use full video?
-                while (hasFrame == true && count < 30)
+                while (hasFrame == true && count < 1)
                 {
                     using (MemoryStream stream = new MemoryStream())
                     {
@@ -190,7 +190,7 @@ namespace Codec
             Encoding();
 
             // Save our video file
-            VideoFile outputVideo = new VideoFile(width, heigth, toBitArrayArray(YBitArray), toBitArrayArray(CbBitArray), toBitArrayArray(CrBitArray));
+            VideoFile outputVideo = new VideoFile(toBitArrayArray(YBitArray), toBitArrayArray(CbBitArray), toBitArrayArray(CrBitArray));
             IFormatter encodingFormatter = new BinaryFormatter();
             Stream encodingStream = new FileStream("akyio.bfv", FileMode.Create, FileAccess.Write, FileShare.None);
             encodingFormatter.Serialize(encodingStream, outputVideo);
@@ -213,7 +213,8 @@ namespace Codec
             //DCT & Quantization & Differential Decoding & Run Lenght Decoding & Huffman Decoding
             Decoding(inputVideo);
 
-            // YCbCrToRGB();
+            // Convert YCbCr images to RGB images
+            YCbCrToRGB();
         }
 
         #region Helper Methods
@@ -233,15 +234,21 @@ namespace Codec
             return bitArrayArray;
         }
 
-        private List<int>[] toIntListArray(BitArray[] bitArray)
+        private List<int>[] toIntListArray(BitArray[] bitArrays)
         {
-            List<int>[] listArray = new List<int>[bitArray.Length];
-            for (int i = 0; i < bitArray.Length; i++)
+            List<int>[] listArray = new List<int>[bitArrays.Length];
+            for (int i = 0; i < bitArrays.Length; i++)
             {
                 List<int> list = new List<int>();
-                for (int j = 0; j < bitArray[i].Length; j++)
+                for (int j = 0; j < bitArrays[i].Length; j++)
                 {
-                    list.Add(Convert.ToInt32(bitArray[i]));
+                    if(bitArrays[i][j])
+                    {
+                        list.Add(1);
+                    } else
+                    {
+                        list.Add(0);
+                    }
                 }
                 listArray[i] = list;
             }
@@ -377,18 +384,31 @@ namespace Codec
                 cBDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cb");
                 cRDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cr");
 
+                yDctQuan = dctImage.TrimValueMatrix(yDctQuan, tempImages[i].width, tempImages[i].height);
+                cBDctQuan = dctImage.TrimValueMatrix(yDctQuan, tempImages[i].width, tempImages[i].height);
+                cRDctQuan = dctImage.TrimValueMatrix(yDctQuan, tempImages[i].width, tempImages[i].height);
+
+                
+                // Tester.PrintToFile("yDctQuanBefore", yDctQuan);
+
                 yDiffEncoded = DifferentialEncoding.Encode(yDctQuan, 8);
                 cBDiffEncoded = DifferentialEncoding.Encode(cBDctQuan, 8);
                 cRDiffEncoded = DifferentialEncoding.Encode(cRDctQuan, 8);
+
+                // Tester.PrintToFile("yDiffEncodedBefore", yDiffEncoded);
 
                 yRunLenEncoded = RunLengthEncode.Encode(yDiffEncoded, 8);
                 cBRunLenEncoded = RunLengthEncode.Encode(cBDiffEncoded, 8);
                 cRRunLenEncoded = RunLengthEncode.Encode(cRDiffEncoded, 8);
 
+                Tester.PrintToFile("yRunLenEncodedBefore", yRunLenEncoded);
+
                 // huffman encoding
                 YBitArray[i] = (HuffmanEncoding(yRunLenEncoded));
                 CbBitArray[i] = (HuffmanEncoding(cBRunLenEncoded));
                 CrBitArray[i] = (HuffmanEncoding(cRRunLenEncoded));
+
+                // Tester.PrintToFile("huffmanBefore", YBitArray);
 
                 // garbage collection
                 tempImages[i] = null;
@@ -425,15 +445,38 @@ namespace Codec
                 cBRunLenEncoded = HuffmanDecoding(CbBitArray[i]);
                 cRRunLenEncoded = HuffmanDecoding(CrBitArray[i]);
 
+                Tester.PrintToFile("yRunLenEncodedAfter", yRunLenEncoded);
+
                 // run length decoding
                 yDiffEncoded = RunLengthEncode.Decode(yRunLenEncoded, 8);
                 cBDiffEncoded = RunLengthEncode.Decode(cBRunLenEncoded, 8);
                 cRDiffEncoded = RunLengthEncode.Decode(cRRunLenEncoded, 8);
 
+                // Tester.PrintToFile("yDiffEncodedAfter", yDiffEncoded);
+
                 // differential decoding
                 yDctQuan = DifferentialEncoding.Decode(yDiffEncoded, 8);
                 cBDctQuan = DifferentialEncoding.Decode(cBDiffEncoded, 8);
                 cRDctQuan = DifferentialEncoding.Decode(cRDiffEncoded, 8);
+
+                // Tester.PrintToFile("yDctQuanAfter", yDctQuan);
+
+                // revert dct and quantization
+                DctImage dctImage = new DctImage();
+                int[,] YMatrix = dctImage.RevertDctAndQuantization(yDctQuan);
+                int[,] CbMatrix = dctImage.RevertDctAndQuantization(cBDctQuan);
+                int[,] CrMatrix = dctImage.RevertDctAndQuantization(cRDctQuan);
+
+                // instantiate YCbCr images
+                YCbCrImage tempImage = new YCbCrImage(YMatrix.GetLength(1), YMatrix.GetLength(0));
+                for (int j = 0; j < YMatrix.GetLength(1); j++)
+                {
+                    for (int k = 0; k < YMatrix.GetLength(0); k++)
+                    {
+                        tempImage.pixels[j, k] = new YCbCrPixel(YMatrix[j, k], CbMatrix[j, k], CrMatrix[j, k]);
+                    }
+                }
+                tempImages[i] = tempImage; 
 
                 progressBar.Value = i;
             }
