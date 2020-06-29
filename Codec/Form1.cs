@@ -16,7 +16,7 @@ namespace Codec
         int keyFrameEvery = 30;
 
         int width = 0;
-        int heigth = 0;
+        int height = 0;
 
         string inputFileName = null;
         Image[] inputImages;
@@ -26,6 +26,10 @@ namespace Codec
         List<int>[] YBitArray;
         List<int>[] CbBitArray;
         List<int>[] CrBitArray;
+
+        Huffman<int>[] YHuffmans;
+        Huffman<int>[] CbHuffmans;
+        Huffman<int>[] CrHuffmans;
 
         string outputFile = null;
         Image[] outputImages;
@@ -87,6 +91,10 @@ namespace Codec
                 YBitArray = new List<int>[inputImages.Length];
                 CbBitArray = new List<int>[inputImages.Length];
                 CrBitArray = new List<int>[inputImages.Length];
+                // init huffmans
+                YHuffmans = new Huffman<int>[inputImages.Length];
+                CbHuffmans = new Huffman<int>[inputImages.Length];
+                CrHuffmans = new Huffman<int>[inputImages.Length];
             }
         }
 
@@ -190,11 +198,20 @@ namespace Codec
             Encoding();
 
             // Save our video file
-            VideoFile outputVideo = new VideoFile(toBitArrayArray(YBitArray), toBitArrayArray(CbBitArray), toBitArrayArray(CrBitArray));
+            VideoFile outputVideo = new VideoFile(width, height, toBitArrayArray(YBitArray), toBitArrayArray(CbBitArray), toBitArrayArray(CrBitArray), YHuffmans, CbHuffmans, CrHuffmans);
+            
             IFormatter encodingFormatter = new BinaryFormatter();
             Stream encodingStream = new FileStream("akyio.bfv", FileMode.Create, FileAccess.Write, FileShare.None);
             encodingFormatter.Serialize(encodingStream, outputVideo);
             encodingStream.Close();
+
+            // Garbage collection
+            for (int i = 0; i < tempImages.Length; i++)
+            {
+                YHuffmans[i] = null;
+                CbHuffmans[i] = null;
+                CrHuffmans[i] = null;
+            }
 
             ///////////////////////////////////////
             /// Encoding done - file saved.
@@ -215,6 +232,7 @@ namespace Codec
 
             // Convert YCbCr images to RGB images
             YCbCrToRGB();
+
         }
 
         #region Helper Methods
@@ -302,7 +320,7 @@ namespace Codec
             // we need this later to save in our video file
             Bitmap tempbm = new Bitmap(inputImages[0]);
             width = tempbm.Width;
-            heigth = tempbm.Height;
+            height = tempbm.Height;
 
             progressLabel.Visible = false;
             progressBar.Visible = false;
@@ -383,30 +401,25 @@ namespace Codec
                 yDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Y");
                 cBDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cb");
                 cRDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cr");
-
-                yDctQuan = dctImage.TrimValueMatrix(yDctQuan, tempImages[i].width, tempImages[i].height);
-                cBDctQuan = dctImage.TrimValueMatrix(yDctQuan, tempImages[i].width, tempImages[i].height);
-                cRDctQuan = dctImage.TrimValueMatrix(yDctQuan, tempImages[i].width, tempImages[i].height);
-
                 
-                // Tester.PrintToFile("yDctQuanBefore", yDctQuan);
+                //Tester.PrintToFile("yDctQuanBefore", yDctQuan);
 
                 yDiffEncoded = DifferentialEncoding.Encode(yDctQuan, 8);
                 cBDiffEncoded = DifferentialEncoding.Encode(cBDctQuan, 8);
                 cRDiffEncoded = DifferentialEncoding.Encode(cRDctQuan, 8);
 
-                // Tester.PrintToFile("yDiffEncodedBefore", yDiffEncoded);
+                Tester.PrintToFile("yDiffEncodedBefore", yDiffEncoded);
 
                 yRunLenEncoded = RunLengthEncode.Encode(yDiffEncoded, 8);
                 cBRunLenEncoded = RunLengthEncode.Encode(cBDiffEncoded, 8);
                 cRRunLenEncoded = RunLengthEncode.Encode(cRDiffEncoded, 8);
 
-                Tester.PrintToFile("yRunLenEncodedBefore", yRunLenEncoded);
+                //Tester.PrintToFile("yRunLenEncodedBefore", yRunLenEncoded);
 
                 // huffman encoding
-                YBitArray[i] = (HuffmanEncoding(yRunLenEncoded));
-                CbBitArray[i] = (HuffmanEncoding(cBRunLenEncoded));
-                CrBitArray[i] = (HuffmanEncoding(cRRunLenEncoded));
+                YBitArray[i] = (HuffmanEncoding(yRunLenEncoded, i, "Y"));
+                CbBitArray[i] = (HuffmanEncoding(cBRunLenEncoded, i, "Cb"));
+                CrBitArray[i] = (HuffmanEncoding(cRRunLenEncoded, i, "Cr"));
 
                 // Tester.PrintToFile("huffmanBefore", YBitArray);
 
@@ -441,25 +454,25 @@ namespace Codec
             for (int i = 0; i < tempImages.Length; i++)
             {
                 // huffman decoding
-                yRunLenEncoded = HuffmanDecoding(YBitArray[i]);
-                cBRunLenEncoded = HuffmanDecoding(CbBitArray[i]);
-                cRRunLenEncoded = HuffmanDecoding(CrBitArray[i]);
+                yRunLenEncoded = HuffmanDecoding(YBitArray[i], video.YHuffmans[i]);
+                cBRunLenEncoded = HuffmanDecoding(CbBitArray[i], video.CbHuffmans[i]);
+                cRRunLenEncoded = HuffmanDecoding(CrBitArray[i], video.CrHuffmans[i]);
 
-                Tester.PrintToFile("yRunLenEncodedAfter", yRunLenEncoded);
+                //Tester.PrintToFile("yRunLenEncodedAfter", yRunLenEncoded);
 
                 // run length decoding
-                yDiffEncoded = RunLengthEncode.Decode(yRunLenEncoded, 8);
-                cBDiffEncoded = RunLengthEncode.Decode(cBRunLenEncoded, 8);
-                cRDiffEncoded = RunLengthEncode.Decode(cRRunLenEncoded, 8);
+                yDiffEncoded = RunLengthEncode.Decode(yRunLenEncoded, 8, video.width, video.height);
+                cBDiffEncoded = RunLengthEncode.Decode(cBRunLenEncoded, 8, video.width, video.height);
+                cRDiffEncoded = RunLengthEncode.Decode(cRRunLenEncoded, 8, video.width, video.height);
 
-                // Tester.PrintToFile("yDiffEncodedAfter", yDiffEncoded);
+                Tester.PrintToFile("yDiffEncodedAfter", yDiffEncoded);
 
                 // differential decoding
                 yDctQuan = DifferentialEncoding.Decode(yDiffEncoded, 8);
                 cBDctQuan = DifferentialEncoding.Decode(cBDiffEncoded, 8);
                 cRDctQuan = DifferentialEncoding.Decode(cRDiffEncoded, 8);
 
-                // Tester.PrintToFile("yDctQuanAfter", yDctQuan);
+                //Tester.PrintToFile("yDctQuanAfter", yDctQuan);
 
                 // revert dct and quantization
                 DctImage dctImage = new DctImage();
@@ -467,11 +480,15 @@ namespace Codec
                 int[,] CbMatrix = dctImage.RevertDctAndQuantization(cBDctQuan);
                 int[,] CrMatrix = dctImage.RevertDctAndQuantization(cRDctQuan);
 
+                YMatrix = dctImage.TrimValueMatrix(YMatrix, video.width, video.height);
+                CbMatrix = dctImage.TrimValueMatrix(CbMatrix, video.width, video.height);
+                CrMatrix = dctImage.TrimValueMatrix(CrMatrix, video.width, video.height);
+
                 // instantiate YCbCr images
-                YCbCrImage tempImage = new YCbCrImage(YMatrix.GetLength(1), YMatrix.GetLength(0));
-                for (int j = 0; j < YMatrix.GetLength(1); j++)
+                YCbCrImage tempImage = new YCbCrImage(YMatrix.GetLength(0), YMatrix.GetLength(1));
+                for (int j = 0; j < YMatrix.GetLength(0); j++)
                 {
-                    for (int k = 0; k < YMatrix.GetLength(0); k++)
+                    for (int k = 0; k < YMatrix.GetLength(1); k++)
                     {
                         tempImage.pixels[j, k] = new YCbCrPixel(YMatrix[j, k], CbMatrix[j, k], CrMatrix[j, k]);
                     }
@@ -487,15 +504,26 @@ namespace Codec
             this.Update();
         }
 
-        private List<int> HuffmanEncoding(int[] array)
+        private List<int> HuffmanEncoding(int[] array, int pos, string channel)
         {
             var huffman = new Huffman<int>(array);
+            if (channel == "Y")
+            {
+                YHuffmans[pos] = huffman;
+            }
+            else if (channel == "Cb")
+            {
+                CbHuffmans[pos] = huffman;
+            }
+            else if (channel == "Cr")
+            {
+                CrHuffmans[pos] = huffman;
+            }
             return huffman.Encode(array);
         }
 
-        private int[] HuffmanDecoding(List<int> list)
+        private int[] HuffmanDecoding(List<int> list, Huffman<int> huffman)
         {
-            var huffman = new Huffman<int>(list);
             return huffman.Decode(list).ToArray();
         }
 

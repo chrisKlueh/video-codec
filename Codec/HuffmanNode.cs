@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 namespace Codec
 {
     // https://rosettacode.org/wiki/Huffman_coding#C.23
+    [Serializable]
     public class Huffman<T> where T : IComparable
     {
         private readonly Dictionary<T, HuffmanNode<T>> _leafDictionary = new Dictionary<T, HuffmanNode<T>>();
@@ -109,6 +110,7 @@ namespace Codec
             return returnValue;
         }
     }
+    [Serializable]
     internal class HuffmanNode<T> : IComparable
     {
         internal HuffmanNode(double probability, T value)
@@ -156,6 +158,7 @@ namespace Codec
         }
     }
 
+    [Serializable]
     internal class PriorityQueue<T> where T : IComparable
     {
         protected List<T> LstHeap = new List<T>();

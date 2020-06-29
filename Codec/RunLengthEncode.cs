@@ -33,11 +33,11 @@ public class RunLengthEncode
         return list.ToArray();
     }
 
-    public static int[,] Decode(int[] data, int blockSize)
+    public static int[,] Decode(int[] data, int blockSize, int width, int height)
     {
         int[] decodedData = Decode(data);
 
-        int[,] matrix = ZickZack.ToMatrix(decodedData, blockSize, 8, 8);
+        int[,] matrix = ZickZack.ToMatrix(decodedData, blockSize, width, height);
 
         return matrix;
     }

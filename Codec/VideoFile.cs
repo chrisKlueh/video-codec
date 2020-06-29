@@ -10,15 +10,25 @@ namespace Codec
     [Serializable]
     class VideoFile
     {
+        public int width;
+        public int height;
         public BitArray[] YBitArray;
         public BitArray[] CbBitArray;
         public BitArray[] CrBitArray;
+        public Huffman<int>[] YHuffmans;
+        public Huffman<int>[] CbHuffmans;
+        public Huffman<int>[] CrHuffmans;
 
-        public VideoFile(BitArray[] YBitArray, BitArray[] CbBitArray, BitArray[] CrBitArray)
+        public VideoFile(int width, int height, BitArray[] YBitArray, BitArray[] CbBitArray, BitArray[] CrBitArray, Huffman<int>[] YHuffmans, Huffman<int>[] CbHuffmans, Huffman<int>[] CrHuffmans)
         {
+            this.width = width;
+            this.height = height;
             this.YBitArray = YBitArray;
             this.CbBitArray = CbBitArray;
             this.CrBitArray = CrBitArray;
+            this.YHuffmans = YHuffmans;
+            this.CbHuffmans = CbHuffmans;
+            this.CrHuffmans = CrHuffmans;
         }
     }
 }
