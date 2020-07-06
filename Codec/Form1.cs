@@ -401,7 +401,11 @@ namespace Codec
                 yDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Y");
                 cBDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cb");
                 cRDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cr");
-                
+
+                yDctQuan = dctImage.TrimValueMatrix(yDctQuan, width, height);
+                cBDctQuan = dctImage.TrimValueMatrix(cBDctQuan, width, height);
+                cRDctQuan = dctImage.TrimValueMatrix(cRDctQuan, width, height);
+
                 Tester.PrintToFile("yDctQuanBefore", yDctQuan);
 
                 yDiffEncoded = DifferentialEncoding.Encode(yDctQuan, 8);

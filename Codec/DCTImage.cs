@@ -99,6 +99,33 @@ namespace Codec
             return paddedValueMatrix;
         }
 
+        private int[,] PadValueMatrix(int[,] valueMatrix)
+        {
+            //calculate the additional columns and rows the paddedValueMatrix needs to have a multiple of 8 columns and rows
+            int paddingHeight = valueMatrix.GetLength(0) == 8 ? 0 : 8 - (valueMatrix.GetLength(0) % 8);
+            int paddingWidth = valueMatrix.GetLength(1) == 8 ? 0 : 8 - (valueMatrix.GetLength(1) % 8);
+
+
+            //create the new matrix
+            int[,] paddedValueMatrix = new int[valueMatrix.GetLength(0) + paddingHeight, valueMatrix.GetLength(1) + paddingWidth];
+
+            for (int height = 0; height < paddedValueMatrix.GetLength(0); height++)
+            {
+                for (int width = 0; width < paddedValueMatrix.GetLength(1); width++)
+                {
+                    int value;
+                    //fill paddedValueMatrix with all values of valueMatrix
+                    if (width < valueMatrix.GetLength(1) && height < valueMatrix.GetLength(0))
+                    {
+                        value = valueMatrix[height, width];
+                    }
+                    else { value = 0; }
+                    paddedValueMatrix[height, width] = value;
+                }
+            }
+            return paddedValueMatrix;
+        }
+
         public int[,] TrimValueMatrix(int[,] valueMatrix, int width, int height)
         {
             int[,] trimmedValueMatrix = new int[width, height];
@@ -255,7 +282,10 @@ namespace Codec
 
         public int[,] RevertDctAndQuantization(int[,] array)
         {
+            array = PadValueMatrix(array);
+
             int[,] resultMatrix = new int[array.GetLength(0), array.GetLength(1)];
+
             //iterate the matrix in 8x8 blocks
             for (int width = 0; width <= array.GetLength(1) - 8; width += 8)
             {
