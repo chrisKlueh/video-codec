@@ -8,6 +8,8 @@ public class RunLengthEncode
 
         int[] encodedData = Encode(data);
 
+        //Codec.Tester.PrintToFile("encodedData", encodedData);
+
         return encodedData;
     }
 
@@ -34,8 +36,10 @@ public class RunLengthEncode
     }
 
     public static int[,] Decode(int[] data, int blockSize, int width, int height)
-    {
+    { 
         int[] decodedData = Decode(data);
+
+        //Codec.Tester.PrintToFile("decodedData",decodedData);
 
         int[,] matrix = ZickZack.ToMatrix(decodedData, blockSize, width, height);
 

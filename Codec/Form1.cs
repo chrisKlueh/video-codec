@@ -402,13 +402,13 @@ namespace Codec
                 cBDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cb");
                 cRDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cr");
                 
-                //Tester.PrintToFile("yDctQuanBefore", yDctQuan);
+                Tester.PrintToFile("yDctQuanBefore", yDctQuan);
 
                 yDiffEncoded = DifferentialEncoding.Encode(yDctQuan, 8);
                 cBDiffEncoded = DifferentialEncoding.Encode(cBDctQuan, 8);
                 cRDiffEncoded = DifferentialEncoding.Encode(cRDctQuan, 8);
 
-                Tester.PrintToFile("yDiffEncodedBefore", yDiffEncoded);
+                //Tester.PrintToFile("yDiffEncodedBefore", yDiffEncoded);
 
                 yRunLenEncoded = RunLengthEncode.Encode(yDiffEncoded, 8);
                 cBRunLenEncoded = RunLengthEncode.Encode(cBDiffEncoded, 8);
@@ -465,14 +465,14 @@ namespace Codec
                 cBDiffEncoded = RunLengthEncode.Decode(cBRunLenEncoded, 8, video.width, video.height);
                 cRDiffEncoded = RunLengthEncode.Decode(cRRunLenEncoded, 8, video.width, video.height);
 
-                Tester.PrintToFile("yDiffEncodedAfter", yDiffEncoded);
+                //Tester.PrintToFile("yDiffEncodedAfter", yDiffEncoded);
 
                 // differential decoding
                 yDctQuan = DifferentialEncoding.Decode(yDiffEncoded, 8);
                 cBDctQuan = DifferentialEncoding.Decode(cBDiffEncoded, 8);
                 cRDctQuan = DifferentialEncoding.Decode(cRDiffEncoded, 8);
 
-                //Tester.PrintToFile("yDctQuanAfter", yDctQuan);
+                Tester.PrintToFile("yDctQuanAfter", yDctQuan);
 
                 // revert dct and quantization
                 DctImage dctImage = new DctImage();

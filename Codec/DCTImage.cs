@@ -106,7 +106,7 @@ namespace Codec
             {
                 for (int j = 0; j < width; j++)
                 {
-                    trimmedValueMatrix[j, i] = valueMatrix[j, i];
+                    trimmedValueMatrix[j, i] = valueMatrix[j,i];
                 }
             }
             return trimmedValueMatrix;
