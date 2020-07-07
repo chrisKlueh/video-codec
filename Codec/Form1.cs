@@ -35,16 +35,15 @@ namespace Codec
         string outputFile = null;
         Image[] outputImages;
 
-<<<<<<< HEAD
+
         // needed for multi huffman encoding
         int[][] YHuffmanValues;
         int[][] CbHuffmanValues;
         int[][] CrHuffmanValues;
-=======
+
         int maxThreads = 4;
 
         static Semaphore _encodingPool;
->>>>>>> dev
 
         public Form1()
         {
@@ -76,11 +75,7 @@ namespace Codec
                 var count = 0;
 
                 // TODO: use full video?
-<<<<<<< HEAD
                 while (hasFrame == true && count < 15)
-=======
-                while (hasFrame == true && count < 30)
->>>>>>> dev
                 {
                     using (MemoryStream stream = new MemoryStream())
                     {
@@ -227,13 +222,8 @@ namespace Codec
             Encoding();
 
             // Save our video file
-<<<<<<< HEAD
             VideoFile outputVideo = new VideoFile(keyFrameEvery, width, height, toBitArrayArray(YBitArray), toBitArrayArray(CbBitArray), toBitArrayArray(CrBitArray), YHuffmans, CbHuffmans, CrHuffmans);
-            
-=======
-            VideoFile outputVideo = new VideoFile(width, height, toBitArrayArray(YBitArray), toBitArrayArray(CbBitArray), toBitArrayArray(CrBitArray), YHuffmans, CbHuffmans, CrHuffmans);
 
->>>>>>> dev
             IFormatter encodingFormatter = new BinaryFormatter();
             Stream encodingStream = new FileStream("akyio.bfv", FileMode.Create, FileAccess.Write, FileShare.None);
             encodingFormatter.Serialize(encodingStream, outputVideo);
@@ -242,9 +232,9 @@ namespace Codec
             // Garbage collection
             for (int i = 0; i < tempImages.Length; i++)
             {
-                YHuffmans[i] = null;
-                CbHuffmans[i] = null;
-                CrHuffmans[i] = null;
+                YHuffmans[i / keyFrameEvery] = null;
+                CbHuffmans[i / keyFrameEvery] = null;
+                CrHuffmans[i / keyFrameEvery] = null;
             }
 
             ///////////////////////////////////////
@@ -528,9 +518,9 @@ namespace Codec
             for (int i = 0; i < tempImages.Length; i++)
             {
                 // huffman decoding
-                yRunLenEncoded = HuffmanDecoding(YBitArray[(i + keyFrameEvery) / keyFrameEvery], video.YHuffmans[i]);
-                cBRunLenEncoded = HuffmanDecoding(CbBitArray[(i + keyFrameEvery) / keyFrameEvery], video.CbHuffmans[i]);
-                cRRunLenEncoded = HuffmanDecoding(CrBitArray[(i + keyFrameEvery) / keyFrameEvery], video.CrHuffmans[i]);
+                yRunLenEncoded = HuffmanDecoding(YBitArray[i], video.YHuffmans[i / keyFrameEvery]);
+                cBRunLenEncoded = HuffmanDecoding(CbBitArray[i], video.CbHuffmans[i / keyFrameEvery]);
+                cRRunLenEncoded = HuffmanDecoding(CrBitArray[i], video.CrHuffmans[i / keyFrameEvery]);
 
                 //Tester.PrintToFile("yRunLenEncodedAfter", yRunLenEncoded);
 
@@ -611,14 +601,14 @@ namespace Codec
                 for (int j = 0; j < keyFrameEvery; j++)
                 {
                     int k = i - keyFrameEvery + 1 + j;
-                    YBitArray[k] = HuffmanEncoding(YHuffman, yRunLenEncoded);
-                    CbBitArray[k] = HuffmanEncoding(CbHuffman, cBRunLenEncoded);
-                    CrBitArray[k] = HuffmanEncoding(CrHuffman, cRRunLenEncoded);
+                    YBitArray[k] = HuffmanEncoding(YHuffman, YHuffmanValues[j]);
+                    CbBitArray[k] = HuffmanEncoding(CbHuffman, CbHuffmanValues[j]);
+                    CrBitArray[k] = HuffmanEncoding(CrHuffman, CrHuffmanValues[j]);
                 }
 
-                YHuffmans[i / (keyFrameEvery - 1)] = YHuffman;
-                CbHuffmans[i / (keyFrameEvery - 1)] = CbHuffman;
-                CrHuffmans[i / (keyFrameEvery - 1)] = CrHuffman;
+                YHuffmans[i / keyFrameEvery] = YHuffman;
+                CbHuffmans[i / keyFrameEvery] = CbHuffman;
+                CrHuffmans[i / keyFrameEvery] = CrHuffman;
             }
 
             // TODO: clean up XHuffmanValues
