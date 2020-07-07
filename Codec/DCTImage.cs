@@ -57,6 +57,7 @@ namespace Codec
         ////////////////////////////////////////////////////////////////////////////////
 
         //calculate the quantization matrix based on the qualityFactor
+        //credit to user rayryeng on https://stackoverflow.com/questions/29215879/how-can-i-generalize-the-quantization-matrix-in-jpeg-compression
         private void CalculateQuantizationMatrix(int qualityFactor)
         {
             double s = (qualityFactor < 50) ? (5000 / qualityFactor) : (200 - 2 * qualityFactor);
