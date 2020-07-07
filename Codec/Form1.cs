@@ -39,6 +39,8 @@ namespace Codec
 
         static Semaphore _encodingPool;
 
+        static Semaphore _decodingPool;
+
         public Form1()
         {
             InitializeComponent();
@@ -404,10 +406,6 @@ namespace Codec
             // needed to update UI
             this.Update();
 
-            Stopwatch sw = new Stopwatch();
-
-            sw.Start();
-
             _encodingPool = new Semaphore(0, 1);
 
             Thread[] threads = new Thread[maxThreads];
@@ -415,7 +413,7 @@ namespace Codec
             for (int i = 0; i < maxThreads; i++)
             {
                 int localNum = i;
-                threads[i] = new Thread(() => parallelEncoding(localNum));
+                threads[i] = new Thread(() => ParallelEncoding(localNum));
                 threads[i].Start();
             }
 
@@ -425,10 +423,6 @@ namespace Codec
             {
                 threads[i].Join();
             }
-
-            sw.Stop();
-
-            Tester.PrintToFile("timeEncoding", sw.Elapsed + "");
             
             progressLabel.Visible = false;
             progressBar.Visible = false;
@@ -436,14 +430,14 @@ namespace Codec
             this.Update();
         }
 
-        public void parallelEncoding(int threadNum)
+        public void ParallelEncoding(int threadNum)
         {
             int[,] yDctQuan, cBDctQuan, cRDctQuan, yDiffEncoded, cBDiffEncoded, cRDiffEncoded;
             int[] yRunLenEncoded, cBRunLenEncoded, cRRunLenEncoded;
 
             int offset = tempImages.Length / maxThreads;
             int start = threadNum * offset;
-            int finish = threadNum != 3 ? (threadNum + 1) * offset : tempImages.Length;
+            int finish = threadNum != (maxThreads - 1) ? (threadNum + 1) * offset : tempImages.Length;
 
             for (int i = start; i < finish; i++)
             {
@@ -482,9 +476,7 @@ namespace Codec
 
                // _encodingPool.WaitOne();
 
-              //  progressBar.Value++;
-
-            //    _encodingPool.Release();
+               // _encodingPool.Release();
             }
         }
 
@@ -497,6 +489,32 @@ namespace Codec
             // needed to update UI
             this.Update();
 
+            _decodingPool = new Semaphore(0, 1);
+
+            Thread[] threads = new Thread[maxThreads];
+
+            for (int i = 0; i < maxThreads; i++)
+            {
+                int localNum = i;
+                threads[i] = new Thread(() => ParallelDecoding(localNum, video));
+                threads[i].Start();
+            }
+
+            _decodingPool.Release(1);
+
+            for (int i = 0; i < maxThreads; i++)
+            {
+                threads[i].Join();
+            }
+
+            progressLabel.Visible = false;
+            progressBar.Visible = false;
+            // needed to update UI
+            this.Update();
+        }
+
+        private void ParallelDecoding(int threadNum, VideoFile video)
+        {
             int[,] yDctQuan, cBDctQuan, cRDctQuan, yDiffEncoded, cBDiffEncoded, cRDiffEncoded;
             int[] yRunLenEncoded, cBRunLenEncoded, cRRunLenEncoded;
 
@@ -504,7 +522,11 @@ namespace Codec
             CbBitArray = toIntListArray(video.CbBitArray);
             CrBitArray = toIntListArray(video.CrBitArray);
 
-            for (int i = 0; i < tempImages.Length; i++)
+            int offset = tempImages.Length / maxThreads;
+            int start = threadNum * offset;
+            int finish = threadNum != (maxThreads - 1) ? (threadNum + 1) * offset : tempImages.Length;
+
+            for (int i = start; i < finish; i++)
             {
                 // huffman decoding
                 yRunLenEncoded = HuffmanDecoding(YBitArray[i], video.YHuffmans[i]);
@@ -548,13 +570,10 @@ namespace Codec
                 }
                 tempImages[i] = tempImage;
 
-                progressBar.Value = i;
+                // _encodingPool.WaitOne();
+                //progressBar.Value = i;
+                // _encodingPool.Release();
             }
-
-            progressLabel.Visible = false;
-            progressBar.Visible = false;
-            // needed to update UI
-            this.Update();
         }
 
         private List<int> HuffmanEncoding(int[] array, int pos, string channel)
