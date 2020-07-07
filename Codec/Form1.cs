@@ -35,7 +35,7 @@ namespace Codec
         string outputFile = null;
         Image[] outputImages;
 
-        const int maxThreads = 1;
+        int maxThreads = 4;
 
         static Semaphore _encodingPool;
 
@@ -136,6 +136,12 @@ namespace Codec
             {
                 // TODO: alert error?
             }
+        }
+
+        // choose the number of Threads
+        private void multiThreadSaveButton_Click(object sender, EventArgs e)
+        {
+            maxThreads = Decimal.ToInt32(multiThreadInput.Value);
         }
 
         // play the video
@@ -404,7 +410,7 @@ namespace Codec
 
             _encodingPool = new Semaphore(0, 1);
 
-            Thread[] threads = new Thread[4];
+            Thread[] threads = new Thread[maxThreads];
 
             for (int i = 0; i < maxThreads; i++)
             {
@@ -575,11 +581,5 @@ namespace Codec
         }
 
         #endregion
-    }
-
-    public class ParameterizedThread {
-       
-       
-
     }
 }
