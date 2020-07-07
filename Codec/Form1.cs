@@ -225,6 +225,7 @@ namespace Codec
             IFormatter decodingFormatter = new BinaryFormatter();
             Stream decodingStream = new FileStream("akyio.bfv", FileMode.Open, FileAccess.Read, FileShare.Read);
             VideoFile inputVideo = (VideoFile)decodingFormatter.Deserialize(decodingStream);
+            outputSizeLabel.Text = "Output file size: " + BytesToString(decodingStream.Length);
             decodingStream.Close();
 
             //DCT & Quantization & Differential Decoding & Run Lenght Decoding & Huffman Decoding
