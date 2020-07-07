@@ -97,9 +97,9 @@ namespace Codec
                 CbBitArray = new List<int>[inputImages.Length];
                 CrBitArray = new List<int>[inputImages.Length];
                 // init huffmans
-                YHuffmans = new Huffman<int>[inputImages.Length];
-                CbHuffmans = new Huffman<int>[inputImages.Length];
-                CrHuffmans = new Huffman<int>[inputImages.Length];
+                YHuffmans = new Huffman<int>[inputImages.Length / keyFrameEvery];
+                CbHuffmans = new Huffman<int>[inputImages.Length / keyFrameEvery];
+                CrHuffmans = new Huffman<int>[inputImages.Length / keyFrameEvery];
                 // init multi huffmans
                 YHuffmanValues = new int[keyFrameEvery][];
                 CbHuffmanValues = new int[keyFrameEvery][];
@@ -469,9 +469,9 @@ namespace Codec
             for (int i = 0; i < tempImages.Length; i++)
             {
                 // huffman decoding
-                yRunLenEncoded = HuffmanDecoding(YBitArray[i], video.YHuffmans[i]);
-                cBRunLenEncoded = HuffmanDecoding(CbBitArray[i], video.CbHuffmans[i]);
-                cRRunLenEncoded = HuffmanDecoding(CrBitArray[i], video.CrHuffmans[i]);
+                yRunLenEncoded = HuffmanDecoding(YBitArray[(i + keyFrameEvery) / keyFrameEvery], video.YHuffmans[i]);
+                cBRunLenEncoded = HuffmanDecoding(CbBitArray[(i + keyFrameEvery) / keyFrameEvery], video.CbHuffmans[i]);
+                cRRunLenEncoded = HuffmanDecoding(CrBitArray[(i + keyFrameEvery) / keyFrameEvery], video.CrHuffmans[i]);
 
                 //Tester.PrintToFile("yRunLenEncodedAfter", yRunLenEncoded);
 
@@ -555,10 +555,11 @@ namespace Codec
                     YBitArray[k] = HuffmanEncoding(YHuffman, yRunLenEncoded);
                     CbBitArray[k] = HuffmanEncoding(CbHuffman, cBRunLenEncoded);
                     CrBitArray[k] = HuffmanEncoding(CrHuffman, cRRunLenEncoded);
-                    YHuffmans[k] = YHuffman;
-                    CbHuffmans[k] = CbHuffman;
-                    CrHuffmans[k] = CrHuffman;
                 }
+
+                YHuffmans[i / (keyFrameEvery - 1)] = YHuffman;
+                CbHuffmans[i / (keyFrameEvery - 1)] = CbHuffman;
+                CrHuffmans[i / (keyFrameEvery - 1)] = CrHuffman;
             }
 
             // TODO: clean up XHuffmanValues
