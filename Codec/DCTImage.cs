@@ -6,7 +6,12 @@ namespace Codec
     {
         private YCbCrImage image;
         
-        private int[,] quantizationMatrix = new int[8, 8] {
+        //qualityFactor range from 1 to 100; 
+        //50 = no change to base matrix used for quantization; 
+        //1 = poorest quality; 100 = highest quality
+        private int qualityFactor;
+        
+        private int[,] quantizationBaseMatrix = new int[8, 8] {
             { 16, 11, 10, 16, 24, 40, 51, 61 },
             { 12, 12, 14, 19, 26, 58, 60, 55 },
             { 14, 13, 16, 24, 40, 57, 69, 56 },
@@ -16,28 +21,58 @@ namespace Codec
             { 49, 64, 78, 87, 103, 121, 120, 101 },
             { 72, 92, 95, 98, 112, 100, 103, 99 }
         };
-        
-        /*
-        private int[,] quantizationMatrix = new int[8, 8] {
-            { 2, 2, 2, 2, 2, 2, 2, 2 },
-            { 2, 2, 2, 2, 2, 2, 2, 2 },
-            { 2, 2, 2, 2, 2, 2, 2, 2 },
-            { 2, 2, 2, 2, 2, 2, 2, 2 },
-            { 2, 2, 2, 2, 2, 2, 2, 2 },
-            { 2, 2, 2, 2, 2, 2, 2, 2 },
-            { 2, 2, 2, 2, 2, 2, 2, 2 },
-            { 2, 2, 2, 2, 2, 2, 2, 2 }
-        };
-        */
 
-        public DctImage()
+        private int[,] quantizationMatrix = new int[8, 8];
+        
+        ////////////////////////////////////////////////////////////////////////////////
+        /////Constructors
+        ////////////////////////////////////////////////////////////////////////////////
+
+        public DctImage(int qualityFactor)
         {
             this.image = null;
+            //set qualityFactor to 50 (=base quantization matrix) if given qualityFactor is not in defined range
+            this.qualityFactor = (qualityFactor > 0) && (qualityFactor <= 100) ? qualityFactor : 50;
+            CalculateQuantizationMatrix(this.qualityFactor);
         }
 
         public DctImage(YCbCrImage image)
         {
             this.image = image;
+            //set qualityFactor to 50 (=base quantization matrix)
+            this.qualityFactor = 50;
+            CalculateQuantizationMatrix(this.qualityFactor);
+        }
+
+        public DctImage(YCbCrImage image, int qualityFactor)
+        {
+            this.image = image;
+            //set qualityFactor to 50 (=base quantization matrix) if given qualityFactor is not in defined range
+            this.qualityFactor = (qualityFactor > 0) && (qualityFactor <= 100) ? qualityFactor : 50;
+            CalculateQuantizationMatrix(this.qualityFactor);
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        /////Methods
+        ////////////////////////////////////////////////////////////////////////////////
+
+        //calculate the quantization matrix based on the qualityFactor
+        //credit to user rayryeng on https://stackoverflow.com/questions/29215879/how-can-i-generalize-the-quantization-matrix-in-jpeg-compression
+        private void CalculateQuantizationMatrix(int qualityFactor)
+        {
+            double s = (qualityFactor < 50) ? (5000 / qualityFactor) : (200 - 2 * qualityFactor);
+            
+            for (int i = 0; i < this.quantizationBaseMatrix.GetLength(0); i++)
+            {
+                for (int j = 0; j < this.quantizationBaseMatrix.GetLength(1); j++)
+                {
+                    this.quantizationMatrix[i, j] = (int)Math.Floor((s * (double)this.quantizationBaseMatrix[i, j] + 50) / 100);
+                    if (this.quantizationMatrix[i,j] == 0)
+                    {
+                        this.quantizationMatrix[i, j] = 1;
+                    }
+                }
+            }
         }
 
         //create a matrix containing only Y, Cb or Cr values
