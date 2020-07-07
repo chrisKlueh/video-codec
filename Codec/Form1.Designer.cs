@@ -47,9 +47,13 @@
             this.colorCinput = new System.Windows.Forms.TextBox();
             this.inputCheckBox = new System.Windows.Forms.CheckBox();
             this.outputCheckBox = new System.Windows.Forms.CheckBox();
+            this.multiThreadInput = new System.Windows.Forms.NumericUpDown();
+            this.multiThreadLabel = new System.Windows.Forms.Label();
+            this.multiThreadSaveButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.timeBar)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.outputPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.inputPictureBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.multiThreadInput)).BeginInit();
             this.SuspendLayout();
             // 
             // inputSizeLabel
@@ -238,11 +242,57 @@
             this.outputCheckBox.Text = "Play output";
             this.outputCheckBox.UseVisualStyleBackColor = true;
             // 
+            // multiThreadInput
+            // 
+            this.multiThreadInput.Location = new System.Drawing.Point(607, 401);
+            this.multiThreadInput.Maximum = new decimal(new int[] {
+            8,
+            0,
+            0,
+            0});
+            this.multiThreadInput.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.multiThreadInput.Name = "multiThreadInput";
+            this.multiThreadInput.Size = new System.Drawing.Size(51, 20);
+            this.multiThreadInput.TabIndex = 19;
+            this.multiThreadInput.Tag = "";
+            this.multiThreadInput.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.multiThreadInput.Value = new decimal(new int[] {
+            4,
+            0,
+            0,
+            0});
+            // 
+            // multiThreadLabel
+            // 
+            this.multiThreadLabel.AutoSize = true;
+            this.multiThreadLabel.Location = new System.Drawing.Point(555, 404);
+            this.multiThreadLabel.Name = "multiThreadLabel";
+            this.multiThreadLabel.Size = new System.Drawing.Size(46, 13);
+            this.multiThreadLabel.TabIndex = 20;
+            this.multiThreadLabel.Text = "Threads";
+            // 
+            // multiThreadSaveButton
+            // 
+            this.multiThreadSaveButton.Location = new System.Drawing.Point(583, 424);
+            this.multiThreadSaveButton.Name = "multiThreadSaveButton";
+            this.multiThreadSaveButton.Size = new System.Drawing.Size(75, 23);
+            this.multiThreadSaveButton.TabIndex = 21;
+            this.multiThreadSaveButton.Text = "save";
+            this.multiThreadSaveButton.UseVisualStyleBackColor = true;
+            this.multiThreadSaveButton.Click += new System.EventHandler(this.multiThreadSaveButton_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(670, 591);
+            this.Controls.Add(this.multiThreadSaveButton);
+            this.Controls.Add(this.multiThreadLabel);
+            this.Controls.Add(this.multiThreadInput);
             this.Controls.Add(this.outputCheckBox);
             this.Controls.Add(this.inputCheckBox);
             this.Controls.Add(this.colorCinput);
@@ -267,6 +317,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.timeBar)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.outputPictureBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.inputPictureBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.multiThreadInput)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -293,6 +344,9 @@
         private System.Windows.Forms.TextBox colorCinput;
         private System.Windows.Forms.CheckBox inputCheckBox;
         private System.Windows.Forms.CheckBox outputCheckBox;
+        private System.Windows.Forms.NumericUpDown multiThreadInput;
+        private System.Windows.Forms.Label multiThreadLabel;
+        private System.Windows.Forms.Button multiThreadSaveButton;
     }
 }
 

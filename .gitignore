@@ -368,8 +368,3 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
-
-# We want to push the test video
-[Bb]in/*
-![Bb]in/[Dd]ebug/
-[Bb]in/[Dd]ebug/Codec.exe

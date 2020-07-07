@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -34,10 +35,16 @@ namespace Codec
         string outputFile = null;
         Image[] outputImages;
 
+<<<<<<< HEAD
         // needed for multi huffman encoding
         int[][] YHuffmanValues;
         int[][] CbHuffmanValues;
         int[][] CrHuffmanValues;
+=======
+        int maxThreads = 4;
+
+        static Semaphore _encodingPool;
+>>>>>>> dev
 
         public Form1()
         {
@@ -69,7 +76,11 @@ namespace Codec
                 var count = 0;
 
                 // TODO: use full video?
+<<<<<<< HEAD
                 while (hasFrame == true && count < 15)
+=======
+                while (hasFrame == true && count < 30)
+>>>>>>> dev
                 {
                     using (MemoryStream stream = new MemoryStream())
                     {
@@ -110,9 +121,9 @@ namespace Codec
         // show the chosen image(s)
         private void timeBar_ValueChanged(object sender, EventArgs e)
         {
-            if(inputImages != null && timeBar.Value < inputImages.Length)
+            if (inputImages != null && timeBar.Value < inputImages.Length)
             {
-                if(inputCheckBox.Checked)
+                if (inputCheckBox.Checked)
                 {
                     inputPictureBox.Image = inputImages[timeBar.Value];
                 }
@@ -125,12 +136,12 @@ namespace Codec
                 }
             }
         }
-        
+
         // set which frames will be a key frames (valid range is every 1 - 60 frames)
         private void keyFrameSaveButton_Click(object sender, EventArgs e)
         {
             int tempNum = Int32.Parse(keyFrameInput.Text);
-            if(tempNum > 0 && tempNum <= 60)
+            if (tempNum > 0 && tempNum <= 60)
             {
                 keyFrameEvery = tempNum;
                 YHuffmanValues = new int[keyFrameEvery][];
@@ -145,12 +156,18 @@ namespace Codec
             }
         }
 
+        // choose the number of Threads
+        private void multiThreadSaveButton_Click(object sender, EventArgs e)
+        {
+            maxThreads = Decimal.ToInt32(multiThreadInput.Value);
+        }
+
         // play the video
         private void playButton_Click(object sender, EventArgs e)
         {
             if ((inputCheckBox.Checked && (inputImages != null && timeBar.Value < inputImages.Length)) || (outputCheckBox.Checked && (outputImages != null && timeBar.Value < outputImages.Length)))
             {
-                while(timeBar.Value < inputImages.Length - 1)
+                while (timeBar.Value < inputImages.Length - 1)
                 {
                     timeBar.Value += 1;
                     if (inputCheckBox.Checked)
@@ -197,7 +214,7 @@ namespace Codec
                     subsamplingMode = "4:2:0";
                 }
             }
-            for(int i = 0; i < tempImages.Length; i++)
+            for (int i = 0; i < tempImages.Length; i++)
             {
                 tempImages[i].SetSubsamplingMode(subsamplingMode);
                 progressBar.Value = i;
@@ -210,8 +227,13 @@ namespace Codec
             Encoding();
 
             // Save our video file
+<<<<<<< HEAD
             VideoFile outputVideo = new VideoFile(keyFrameEvery, width, height, toBitArrayArray(YBitArray), toBitArrayArray(CbBitArray), toBitArrayArray(CrBitArray), YHuffmans, CbHuffmans, CrHuffmans);
             
+=======
+            VideoFile outputVideo = new VideoFile(width, height, toBitArrayArray(YBitArray), toBitArrayArray(CbBitArray), toBitArrayArray(CrBitArray), YHuffmans, CbHuffmans, CrHuffmans);
+
+>>>>>>> dev
             IFormatter encodingFormatter = new BinaryFormatter();
             Stream encodingStream = new FileStream("akyio.bfv", FileMode.Create, FileAccess.Write, FileShare.None);
             encodingFormatter.Serialize(encodingStream, outputVideo);
@@ -273,7 +295,7 @@ namespace Codec
                 List<int> list = new List<int>();
                 for (int j = 0; j < bitArrays[i].Length; j++)
                 {
-                    if(bitArrays[i][j])
+                    if (bitArrays[i][j])
                     {
                         list.Add(1);
                     } else
@@ -384,7 +406,7 @@ namespace Codec
 
         private void getValidRGBValue(int value, out int validValue)
         {
-            if(value < 0)
+            if (value < 0)
             {
                 validValue = 0;
             } else if (value > 255)
@@ -405,10 +427,48 @@ namespace Codec
             // needed to update UI
             this.Update();
 
+            Stopwatch sw = new Stopwatch();
+
+            sw.Start();
+
+            _encodingPool = new Semaphore(0, 1);
+
+            Thread[] threads = new Thread[maxThreads];
+
+            for (int i = 0; i < maxThreads; i++)
+            {
+                int localNum = i;
+                threads[i] = new Thread(() => parallelEncoding(localNum));
+                threads[i].Start();
+            }
+
+            _encodingPool.Release(1);
+
+            for (int i = 0; i < maxThreads; i++)
+            {
+                threads[i].Join();
+            }
+
+            sw.Stop();
+
+            Tester.PrintToFile("timeEncoding", sw.Elapsed + "");
+            
+            progressLabel.Visible = false;
+            progressBar.Visible = false;
+            // needed to update UI
+            this.Update();
+        }
+
+        public void parallelEncoding(int threadNum)
+        {
             int[,] yDctQuan, cBDctQuan, cRDctQuan, yDiffEncoded, cBDiffEncoded, cRDiffEncoded;
             int[] yRunLenEncoded, cBRunLenEncoded, cRRunLenEncoded;
 
-            for (int i = 0; i < tempImages.Length; i++)
+            int offset = tempImages.Length / maxThreads;
+            int start = threadNum * offset;
+            int finish = threadNum != 3 ? (threadNum + 1) * offset : tempImages.Length;
+
+            for (int i = start; i < finish; i++)
             {
                 DctImage dctImage = new DctImage(tempImages[i]);
                 yDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Y");
@@ -419,7 +479,7 @@ namespace Codec
                 cBDctQuan = dctImage.TrimValueMatrix(cBDctQuan, width, height);
                 cRDctQuan = dctImage.TrimValueMatrix(cRDctQuan, width, height);
 
-                Tester.PrintToFile("yDctQuanBefore", yDctQuan);
+                // Tester.PrintToFile("yDctQuanBefore", yDctQuan);
 
                 yDiffEncoded = DifferentialEncoding.Encode(yDctQuan, 8);
                 cBDiffEncoded = DifferentialEncoding.Encode(cBDctQuan, 8);
@@ -441,13 +501,12 @@ namespace Codec
                 // garbage collection
                 tempImages[i] = null;
 
-                progressBar.Value = i;
-            }
+               // _encodingPool.WaitOne();
 
-            progressLabel.Visible = false;
-            progressBar.Visible = false;
-            // needed to update UI
-            this.Update();
+              //  progressBar.Value++;
+
+            //    _encodingPool.Release();
+            }
         }
 
         private void Decoding(VideoFile video)
@@ -487,7 +546,7 @@ namespace Codec
                 cBDctQuan = DifferentialEncoding.Decode(cBDiffEncoded, 8);
                 cRDctQuan = DifferentialEncoding.Decode(cRDiffEncoded, 8);
 
-                Tester.PrintToFile("yDctQuanAfter", yDctQuan);
+                //Tester.PrintToFile("yDctQuanAfter", yDctQuan);
 
                 // revert dct and quantization
                 DctImage dctImage = new DctImage();
@@ -508,7 +567,7 @@ namespace Codec
                         tempImage.pixels[j, k] = new YCbCrPixel(YMatrix[j, k], CbMatrix[j, k], CrMatrix[j, k]);
                     }
                 }
-                tempImages[i] = tempImage; 
+                tempImages[i] = tempImage;
 
                 progressBar.Value = i;
             }

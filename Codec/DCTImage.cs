@@ -50,7 +50,6 @@ namespace Codec
                 {
                     YCbCrPixel pixel = image.GetPixel(width, height);
 
-
                     switch (channelString)
                     {
                         case "Y":
@@ -77,7 +76,6 @@ namespace Codec
             //calculate the additional columns and rows the paddedValueMatrix needs to have a multiple of 8 columns and rows
             int paddingHeight = valueMatrix.GetLength(0) == 8 ? 0 : 8 - (valueMatrix.GetLength(0) % 8);
             int paddingWidth = valueMatrix.GetLength(1) == 8 ? 0 : 8 - (valueMatrix.GetLength(1) % 8);
-            
 
             //create the new matrix
             double[,] paddedValueMatrix = new double[valueMatrix.GetLength(0) + paddingHeight, valueMatrix.GetLength(1) + paddingWidth];
