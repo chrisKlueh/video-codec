@@ -34,6 +34,11 @@ namespace Codec
         string outputFile = null;
         Image[] outputImages;
 
+        // needed for multi huffman encoding
+        int[][] YHuffmanValues;
+        int[][] CbHuffmanValues;
+        int[][] CrHuffmanValues;
+
         public Form1()
         {
             InitializeComponent();
@@ -64,7 +69,7 @@ namespace Codec
                 var count = 0;
 
                 // TODO: use full video?
-                while (hasFrame == true && count < 1)
+                while (hasFrame == true && count < 15)
                 {
                     using (MemoryStream stream = new MemoryStream())
                     {
@@ -95,6 +100,10 @@ namespace Codec
                 YHuffmans = new Huffman<int>[inputImages.Length];
                 CbHuffmans = new Huffman<int>[inputImages.Length];
                 CrHuffmans = new Huffman<int>[inputImages.Length];
+                // init multi huffmans
+                YHuffmanValues = new int[keyFrameEvery][];
+                CbHuffmanValues = new int[keyFrameEvery][];
+                CrHuffmanValues = new int[keyFrameEvery][];
             }
         }
 
@@ -124,6 +133,9 @@ namespace Codec
             if(tempNum > 0 && tempNum <= 60)
             {
                 keyFrameEvery = tempNum;
+                YHuffmanValues = new int[keyFrameEvery][];
+                CbHuffmanValues = new int[keyFrameEvery][];
+                CrHuffmanValues = new int[keyFrameEvery][];
                 timeBar.LargeChange = keyFrameEvery;
                 timeBar.SmallChange = keyFrameEvery;
                 timeBar.TickFrequency = keyFrameEvery;
@@ -198,7 +210,7 @@ namespace Codec
             Encoding();
 
             // Save our video file
-            VideoFile outputVideo = new VideoFile(width, height, toBitArrayArray(YBitArray), toBitArrayArray(CbBitArray), toBitArrayArray(CrBitArray), YHuffmans, CbHuffmans, CrHuffmans);
+            VideoFile outputVideo = new VideoFile(keyFrameEvery, width, height, toBitArrayArray(YBitArray), toBitArrayArray(CbBitArray), toBitArrayArray(CrBitArray), YHuffmans, CbHuffmans, CrHuffmans);
             
             IFormatter encodingFormatter = new BinaryFormatter();
             Stream encodingStream = new FileStream("akyio.bfv", FileMode.Create, FileAccess.Write, FileShare.None);
@@ -422,9 +434,7 @@ namespace Codec
                 //Tester.PrintToFile("yRunLenEncodedBefore", yRunLenEncoded);
 
                 // huffman encoding
-                YBitArray[i] = (HuffmanEncoding(yRunLenEncoded, i, "Y"));
-                CbBitArray[i] = (HuffmanEncoding(cBRunLenEncoded, i, "Cb"));
-                CrBitArray[i] = (HuffmanEncoding(cRRunLenEncoded, i, "Cr"));
+                MultiHuffmanEncoding(i, yRunLenEncoded, cBRunLenEncoded, cRRunLenEncoded);
 
                 // Tester.PrintToFile("huffmanBefore", YBitArray);
 
@@ -509,23 +519,73 @@ namespace Codec
             this.Update();
         }
 
-        private List<int> HuffmanEncoding(int[] array, int pos, string channel)
+        private void MultiHuffmanEncoding(int i, int[] yRunLenEncoded, int[] cBRunLenEncoded, int[] cRRunLenEncoded)
         {
-            var huffman = new Huffman<int>(array);
-            if (channel == "Y")
+            YHuffmanValues[i % keyFrameEvery] = yRunLenEncoded;
+            CbHuffmanValues[i % keyFrameEvery] = cBRunLenEncoded;
+            CrHuffmanValues[i % keyFrameEvery] = cRRunLenEncoded;
+
+            // TODO: fix missing values for: frames % keyFrames != 0
+            if (i % keyFrameEvery == keyFrameEvery - 1)
             {
-                YHuffmans[pos] = huffman;
+                int[] yTemp = new int[0];
+                int[] cBTemp = new int[0];
+                int[] cRTemp = new int[0];
+
+                for(int j = 0; j < keyFrameEvery; j++)
+                {
+                    int yLength = yTemp.Length;
+                    int cBLength = cBTemp.Length;
+                    int cRLength = cRTemp.Length;
+                    Array.Resize(ref yTemp, yLength + YHuffmanValues[j].Length);
+                    Array.Resize(ref cBTemp, cBLength + CbHuffmanValues[j].Length);
+                    Array.Resize(ref cRTemp, cRLength + CrHuffmanValues[j].Length);
+                    Array.Copy(YHuffmanValues[j], 0, yTemp, yLength, YHuffmanValues[j].Length);
+                    Array.Copy(CbHuffmanValues[j], 0, cBTemp, cBLength, CbHuffmanValues[j].Length);
+                    Array.Copy(CrHuffmanValues[j], 0, cRTemp, cRLength, CrHuffmanValues[j].Length);
+                }
+
+                Huffman<int> YHuffman = new Huffman<int>(yTemp);
+                Huffman<int> CbHuffman = new Huffman<int>(cBTemp);
+                Huffman<int> CrHuffman = new Huffman<int>(cRTemp);
+
+                for (int j = 0; j < keyFrameEvery; j++)
+                {
+                    int k = i - keyFrameEvery + 1 + j;
+                    YBitArray[k] = HuffmanEncoding(YHuffman, yRunLenEncoded);
+                    CbBitArray[k] = HuffmanEncoding(CbHuffman, cBRunLenEncoded);
+                    CrBitArray[k] = HuffmanEncoding(CrHuffman, cRRunLenEncoded);
+                    YHuffmans[k] = YHuffman;
+                    CbHuffmans[k] = CbHuffman;
+                    CrHuffmans[k] = CrHuffman;
+                }
             }
-            else if (channel == "Cb")
-            {
-                CbHuffmans[pos] = huffman;
-            }
-            else if (channel == "Cr")
-            {
-                CrHuffmans[pos] = huffman;
-            }
+
+            // TODO: clean up XHuffmanValues
+        }
+
+        private List<int> HuffmanEncoding(Huffman<int> huffman, int[] array)
+        {
             return huffman.Encode(array);
         }
+
+        //private List<int> HuffmanEncoding(int[] array, int pos, string channel)
+        //{
+        //    var huffman = new Huffman<int>(array);
+        //    if (channel == "Y")
+        //    {
+        //        YHuffmans[pos] = huffman;
+        //    }
+        //    else if (channel == "Cb")
+        //    {
+        //        CbHuffmans[pos] = huffman;
+        //    }
+        //    else if (channel == "Cr")
+        //    {
+        //        CrHuffmans[pos] = huffman;
+        //    }
+        //    return huffman.Encode(array);
+        //}
 
         private int[] HuffmanDecoding(List<int> list, Huffman<int> huffman)
         {
