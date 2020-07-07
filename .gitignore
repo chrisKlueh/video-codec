@@ -372,3 +372,4 @@ Temporary Items
 # We want to push the test video
 [Bb]in/*
 ![Bb]in/[Dd]ebug/
+[Bb]in/[Dd]ebug/Codec.exe
