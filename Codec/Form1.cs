@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Codec
@@ -43,10 +44,6 @@ namespace Codec
         int[][] CrHuffmanValues;
 
         int maxThreads = 4;
-
-        static Semaphore _encodingPool;
-
-        static Semaphore _decodingPool;
 
         public Form1()
         {
@@ -430,24 +427,11 @@ namespace Codec
             // needed to update UI
             this.Update();
 
-            _encodingPool = new Semaphore(0, 1);
-
-            Thread[] threads = new Thread[maxThreads];
-
-            for (int i = 0; i < maxThreads; i++)
+            Parallel.For(0, maxThreads, (i) =>
             {
-                int localNum = i;
-                threads[i] = new Thread(() => ParallelEncoding(localNum));
-                threads[i].Start();
-            }
+                ParallelEncoding(i);
+            });
 
-            _encodingPool.Release(1);
-
-            for (int i = 0; i < maxThreads; i++)
-            {
-                threads[i].Join();
-            }
-            
             progressLabel.Visible = false;
             progressBar.Visible = false;
             // needed to update UI
@@ -494,11 +478,22 @@ namespace Codec
                 // Tester.PrintToFile("huffmanBefore", YBitArray);
 
                 // garbage collection
-                tempImages[i] = null;
+                //tempImages[i] = null;
 
-               // _encodingPool.WaitOne();
-
-               // _encodingPool.Release();
+                MethodInvoker mi = new MethodInvoker(() => {
+                    int newValue = progressBar.Value + maxThreads;
+                    if(newValue <= inputImages.Length)
+                    {
+                        progressBar.Value = newValue;
+                    } else
+                    {
+                        progressBar.Value = inputImages.Length;
+                    }
+                });
+                if (!progressBar.InvokeRequired)
+                {
+                    mi.Invoke();
+                }
             }
         }
 
@@ -511,23 +506,10 @@ namespace Codec
             // needed to update UI
             this.Update();
 
-            _decodingPool = new Semaphore(0, 1);
-
-            Thread[] threads = new Thread[maxThreads];
-
-            for (int i = 0; i < maxThreads; i++)
+            Parallel.For(0, maxThreads, (i) =>
             {
-                int localNum = i;
-                threads[i] = new Thread(() => ParallelDecoding(localNum, video));
-                threads[i].Start();
-            }
-
-            _decodingPool.Release(1);
-
-            for (int i = 0; i < maxThreads; i++)
-            {
-                threads[i].Join();
-            }
+                ParallelDecoding(i, video);
+            });
 
             progressLabel.Visible = false;
             progressBar.Visible = false;
@@ -592,9 +574,21 @@ namespace Codec
                 }
                 tempImages[i] = tempImage;
 
-                // _encodingPool.WaitOne();
-                //progressBar.Value = i;
-                // _encodingPool.Release();
+                MethodInvoker mi = new MethodInvoker(() => {
+                    int newValue = progressBar.Value + maxThreads;
+                    if (newValue <= inputImages.Length)
+                    {
+                        progressBar.Value = newValue;
+                    }
+                    else
+                    {
+                        progressBar.Value = inputImages.Length;
+                    }
+                });
+                if (!progressBar.InvokeRequired)
+                {
+                    mi.Invoke();
+                }
             }
         }
 
