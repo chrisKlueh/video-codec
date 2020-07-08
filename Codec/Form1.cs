@@ -238,9 +238,13 @@ namespace Codec
             // Garbage collection
             for (int i = 0; i < tempImages.Length; i++)
             {
+                tempImages[i] = null;
                 YHuffmans[i / keyFrameEvery] = null;
                 CbHuffmans[i / keyFrameEvery] = null;
                 CrHuffmans[i / keyFrameEvery] = null;
+                YBitArray[i] = null;
+                CbBitArray[i] = null;
+                CrBitArray[i] = null;
             }
 
             ///////////////////////////////////////
@@ -435,7 +439,20 @@ namespace Codec
             if(len % threadsXkeyFrames != 0)
             {
                 int end = possibleMultiFors * keyFrameEvery * maxThreads;
-                ParallelEncoding(0, possibleMultiFors, end);
+                int leftOvers = len - end;
+                int numOfThreadsForRest = leftOvers / keyFrameEvery;
+                if(numOfThreadsForRest >= 1)
+                {
+                    Parallel.For(0, numOfThreadsForRest, (i) =>
+                    {
+                        ParallelEncoding(i, possibleMultiFors, end + (i * keyFrameEvery), end + ((i + 1) * keyFrameEvery));
+                    });
+                }
+                leftOvers = leftOvers - (numOfThreadsForRest * keyFrameEvery);
+                if (leftOvers > 0)
+                {
+                    ParallelEncoding(0, possibleMultiFors, tempImages.Length - leftOvers);
+                }
             }
 
             progressLabel.Visible = false;
@@ -444,7 +461,7 @@ namespace Codec
             this.Update();
         }
 
-        public void ParallelEncoding(int threadNum, int possibleMultiFors, int? startValue = null)
+        public void ParallelEncoding(int threadNum, int possibleMultiFors, int? startValue = null, int? endValue = null)
         {
             int[,] yDctQuan, cBDctQuan, cRDctQuan, yDiffEncoded, cBDiffEncoded, cRDiffEncoded;
             int[] yRunLenEncoded, cBRunLenEncoded, cRRunLenEncoded;
@@ -461,7 +478,13 @@ namespace Codec
             if (startValue != null)
             {
                 start = (int)startValue;
-                finish = tempImages.Length;
+                if(endValue != null)
+                {
+                    finish = (int)endValue;
+                } else
+                {
+                    finish = tempImages.Length;
+                }
             } else
             {
                 start = threadNum * offset;
