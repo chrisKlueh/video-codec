@@ -15,6 +15,7 @@ namespace Codec
     public partial class Form1 : Form
     {
         int keyFrameEvery = 30;
+        int quality = 50;
 
         int width = 0;
         int height = 0;
@@ -34,6 +35,12 @@ namespace Codec
 
         string outputFile = null;
         Image[] outputImages;
+
+
+        // needed for multi huffman encoding
+        int[][] YHuffmanValues;
+        int[][] CbHuffmanValues;
+        int[][] CrHuffmanValues;
 
         int maxThreads = 4;
 
@@ -99,9 +106,13 @@ namespace Codec
                 CbBitArray = new List<int>[inputImages.Length];
                 CrBitArray = new List<int>[inputImages.Length];
                 // init huffmans
-                YHuffmans = new Huffman<int>[inputImages.Length];
-                CbHuffmans = new Huffman<int>[inputImages.Length];
-                CrHuffmans = new Huffman<int>[inputImages.Length];
+                YHuffmans = new Huffman<int>[inputImages.Length / keyFrameEvery];
+                CbHuffmans = new Huffman<int>[inputImages.Length / keyFrameEvery];
+                CrHuffmans = new Huffman<int>[inputImages.Length / keyFrameEvery];
+                // init multi huffmans
+                YHuffmanValues = new int[keyFrameEvery][];
+                CbHuffmanValues = new int[keyFrameEvery][];
+                CrHuffmanValues = new int[keyFrameEvery][];
             }
         }
 
@@ -124,6 +135,8 @@ namespace Codec
             }
         }
 
+        #region SaveButtons
+
         // set which frames will be a key frames (valid range is every 1 - 60 frames)
         private void keyFrameSaveButton_Click(object sender, EventArgs e)
         {
@@ -131,6 +144,9 @@ namespace Codec
             if (tempNum > 0 && tempNum <= 60)
             {
                 keyFrameEvery = tempNum;
+                YHuffmanValues = new int[keyFrameEvery][];
+                CbHuffmanValues = new int[keyFrameEvery][];
+                CrHuffmanValues = new int[keyFrameEvery][];
                 timeBar.LargeChange = keyFrameEvery;
                 timeBar.SmallChange = keyFrameEvery;
                 timeBar.TickFrequency = keyFrameEvery;
@@ -145,6 +161,14 @@ namespace Codec
         {
             maxThreads = Decimal.ToInt32(multiThreadInput.Value);
         }
+
+        // choose the quality of the DCT
+        private void qualitySaveButton_Click(object sender, EventArgs e)
+        {
+            quality = Decimal.ToInt32(qualityInput.Value);
+        }
+
+        #endregion
 
         // play the video
         private void playButton_Click(object sender, EventArgs e)
@@ -211,7 +235,7 @@ namespace Codec
             Encoding();
 
             // Save our video file
-            VideoFile outputVideo = new VideoFile(width, height, toBitArrayArray(YBitArray), toBitArrayArray(CbBitArray), toBitArrayArray(CrBitArray), YHuffmans, CbHuffmans, CrHuffmans);
+            VideoFile outputVideo = new VideoFile(keyFrameEvery, quality, width, height, toBitArrayArray(YBitArray), toBitArrayArray(CbBitArray), toBitArrayArray(CrBitArray), YHuffmans, CbHuffmans, CrHuffmans);
 
             IFormatter encodingFormatter = new BinaryFormatter();
             Stream encodingStream = new FileStream("akyio.bfv", FileMode.Create, FileAccess.Write, FileShare.None);
@@ -221,9 +245,9 @@ namespace Codec
             // Garbage collection
             for (int i = 0; i < tempImages.Length; i++)
             {
-                YHuffmans[i] = null;
-                CbHuffmans[i] = null;
-                CrHuffmans[i] = null;
+                YHuffmans[i / keyFrameEvery] = null;
+                CbHuffmans[i / keyFrameEvery] = null;
+                CrHuffmans[i / keyFrameEvery] = null;
             }
 
             ///////////////////////////////////////
@@ -441,7 +465,7 @@ namespace Codec
 
             for (int i = start; i < finish; i++)
             {
-                DctImage dctImage = new DctImage(tempImages[i]);
+                DctImage dctImage = new DctImage(tempImages[i], quality);
                 yDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Y");
                 cBDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cb");
                 cRDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cr");
@@ -465,9 +489,7 @@ namespace Codec
                 //Tester.PrintToFile("yRunLenEncodedBefore", yRunLenEncoded);
 
                 // huffman encoding
-                YBitArray[i] = (HuffmanEncoding(yRunLenEncoded, i, "Y"));
-                CbBitArray[i] = (HuffmanEncoding(cBRunLenEncoded, i, "Cb"));
-                CrBitArray[i] = (HuffmanEncoding(cRRunLenEncoded, i, "Cr"));
+                MultiHuffmanEncoding(i, yRunLenEncoded, cBRunLenEncoded, cRRunLenEncoded);
 
                 // Tester.PrintToFile("huffmanBefore", YBitArray);
 
@@ -529,9 +551,9 @@ namespace Codec
             for (int i = start; i < finish; i++)
             {
                 // huffman decoding
-                yRunLenEncoded = HuffmanDecoding(YBitArray[i], video.YHuffmans[i]);
-                cBRunLenEncoded = HuffmanDecoding(CbBitArray[i], video.CbHuffmans[i]);
-                cRRunLenEncoded = HuffmanDecoding(CrBitArray[i], video.CrHuffmans[i]);
+                yRunLenEncoded = HuffmanDecoding(YBitArray[i], video.YHuffmans[i / keyFrameEvery]);
+                cBRunLenEncoded = HuffmanDecoding(CbBitArray[i], video.CbHuffmans[i / keyFrameEvery]);
+                cRRunLenEncoded = HuffmanDecoding(CrBitArray[i], video.CrHuffmans[i / keyFrameEvery]);
 
                 //Tester.PrintToFile("yRunLenEncodedAfter", yRunLenEncoded);
 
@@ -550,7 +572,7 @@ namespace Codec
                 //Tester.PrintToFile("yDctQuanAfter", yDctQuan);
 
                 // revert dct and quantization
-                DctImage dctImage = new DctImage();
+                DctImage dctImage = new DctImage(quality);
                 int[,] YMatrix = dctImage.RevertDctAndQuantization(yDctQuan);
                 int[,] CbMatrix = dctImage.RevertDctAndQuantization(cBDctQuan);
                 int[,] CrMatrix = dctImage.RevertDctAndQuantization(cRDctQuan);
@@ -576,23 +598,74 @@ namespace Codec
             }
         }
 
-        private List<int> HuffmanEncoding(int[] array, int pos, string channel)
+        private void MultiHuffmanEncoding(int i, int[] yRunLenEncoded, int[] cBRunLenEncoded, int[] cRRunLenEncoded)
         {
-            var huffman = new Huffman<int>(array);
-            if (channel == "Y")
+            YHuffmanValues[i % keyFrameEvery] = yRunLenEncoded;
+            CbHuffmanValues[i % keyFrameEvery] = cBRunLenEncoded;
+            CrHuffmanValues[i % keyFrameEvery] = cRRunLenEncoded;
+
+            // TODO: fix missing values for: frames % keyFrames != 0
+            if (i % keyFrameEvery == keyFrameEvery - 1)
             {
-                YHuffmans[pos] = huffman;
+                int[] yTemp = new int[0];
+                int[] cBTemp = new int[0];
+                int[] cRTemp = new int[0];
+
+                for(int j = 0; j < keyFrameEvery; j++)
+                {
+                    int yLength = yTemp.Length;
+                    int cBLength = cBTemp.Length;
+                    int cRLength = cRTemp.Length;
+                    Array.Resize(ref yTemp, yLength + YHuffmanValues[j].Length);
+                    Array.Resize(ref cBTemp, cBLength + CbHuffmanValues[j].Length);
+                    Array.Resize(ref cRTemp, cRLength + CrHuffmanValues[j].Length);
+                    Array.Copy(YHuffmanValues[j], 0, yTemp, yLength, YHuffmanValues[j].Length);
+                    Array.Copy(CbHuffmanValues[j], 0, cBTemp, cBLength, CbHuffmanValues[j].Length);
+                    Array.Copy(CrHuffmanValues[j], 0, cRTemp, cRLength, CrHuffmanValues[j].Length);
+                }
+
+                Huffman<int> YHuffman = new Huffman<int>(yTemp);
+                Huffman<int> CbHuffman = new Huffman<int>(cBTemp);
+                Huffman<int> CrHuffman = new Huffman<int>(cRTemp);
+
+                for (int j = 0; j < keyFrameEvery; j++)
+                {
+                    int k = i - keyFrameEvery + 1 + j;
+                    YBitArray[k] = HuffmanEncoding(YHuffman, YHuffmanValues[j]);
+                    CbBitArray[k] = HuffmanEncoding(CbHuffman, CbHuffmanValues[j]);
+                    CrBitArray[k] = HuffmanEncoding(CrHuffman, CrHuffmanValues[j]);
+                }
+
+                YHuffmans[i / keyFrameEvery] = YHuffman;
+                CbHuffmans[i / keyFrameEvery] = CbHuffman;
+                CrHuffmans[i / keyFrameEvery] = CrHuffman;
             }
-            else if (channel == "Cb")
-            {
-                CbHuffmans[pos] = huffman;
-            }
-            else if (channel == "Cr")
-            {
-                CrHuffmans[pos] = huffman;
-            }
+
+            // TODO: clean up XHuffmanValues
+        }
+
+        private List<int> HuffmanEncoding(Huffman<int> huffman, int[] array)
+        {
             return huffman.Encode(array);
         }
+
+        //private List<int> HuffmanEncoding(int[] array, int pos, string channel)
+        //{
+        //    var huffman = new Huffman<int>(array);
+        //    if (channel == "Y")
+        //    {
+        //        YHuffmans[pos] = huffman;
+        //    }
+        //    else if (channel == "Cb")
+        //    {
+        //        CbHuffmans[pos] = huffman;
+        //    }
+        //    else if (channel == "Cr")
+        //    {
+        //        CrHuffmans[pos] = huffman;
+        //    }
+        //    return huffman.Encode(array);
+        //}
 
         private int[] HuffmanDecoding(List<int> list, Huffman<int> huffman)
         {

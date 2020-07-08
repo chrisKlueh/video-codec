@@ -10,6 +10,8 @@ namespace Codec
     [Serializable]
     class VideoFile
     {
+        public int keyFrameEvery;
+        public int quality;
         public int width;
         public int height;
         public BitArray[] YBitArray;
@@ -19,8 +21,10 @@ namespace Codec
         public Huffman<int>[] CbHuffmans;
         public Huffman<int>[] CrHuffmans;
 
-        public VideoFile(int width, int height, BitArray[] YBitArray, BitArray[] CbBitArray, BitArray[] CrBitArray, Huffman<int>[] YHuffmans, Huffman<int>[] CbHuffmans, Huffman<int>[] CrHuffmans)
+        public VideoFile(int keyFrameEvery, int quality, int width, int height, BitArray[] YBitArray, BitArray[] CbBitArray, BitArray[] CrBitArray, Huffman<int>[] YHuffmans, Huffman<int>[] CbHuffmans, Huffman<int>[] CrHuffmans)
         {
+            this.keyFrameEvery = keyFrameEvery;
+            this.quality = quality;
             this.width = width;
             this.height = height;
             this.YBitArray = YBitArray;

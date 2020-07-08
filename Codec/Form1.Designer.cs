@@ -50,10 +50,14 @@
             this.multiThreadInput = new System.Windows.Forms.NumericUpDown();
             this.multiThreadLabel = new System.Windows.Forms.Label();
             this.multiThreadSaveButton = new System.Windows.Forms.Button();
+            this.qualityLabel = new System.Windows.Forms.Label();
+            this.qualityInput = new System.Windows.Forms.NumericUpDown();
+            this.qualitySaveButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.timeBar)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.outputPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.inputPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.multiThreadInput)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.qualityInput)).BeginInit();
             this.SuspendLayout();
             // 
             // inputSizeLabel
@@ -118,7 +122,7 @@
             // 
             // keyFrameInput
             // 
-            this.keyFrameInput.Location = new System.Drawing.Point(101, 426);
+            this.keyFrameInput.Location = new System.Drawing.Point(108, 440);
             this.keyFrameInput.Name = "keyFrameInput";
             this.keyFrameInput.Size = new System.Drawing.Size(33, 20);
             this.keyFrameInput.TabIndex = 8;
@@ -128,7 +132,7 @@
             // keyFrameLabel1
             // 
             this.keyFrameLabel1.AutoSize = true;
-            this.keyFrameLabel1.Location = new System.Drawing.Point(12, 429);
+            this.keyFrameLabel1.Location = new System.Drawing.Point(19, 443);
             this.keyFrameLabel1.Name = "keyFrameLabel1";
             this.keyFrameLabel1.Size = new System.Drawing.Size(83, 13);
             this.keyFrameLabel1.TabIndex = 9;
@@ -137,7 +141,7 @@
             // keyFrameLabel2
             // 
             this.keyFrameLabel2.AutoSize = true;
-            this.keyFrameLabel2.Location = new System.Drawing.Point(140, 429);
+            this.keyFrameLabel2.Location = new System.Drawing.Point(147, 443);
             this.keyFrameLabel2.Name = "keyFrameLabel2";
             this.keyFrameLabel2.Size = new System.Drawing.Size(38, 13);
             this.keyFrameLabel2.TabIndex = 10;
@@ -145,7 +149,7 @@
             // 
             // keyFrameSaveButton
             // 
-            this.keyFrameSaveButton.Location = new System.Drawing.Point(184, 424);
+            this.keyFrameSaveButton.Location = new System.Drawing.Point(191, 438);
             this.keyFrameSaveButton.Name = "keyFrameSaveButton";
             this.keyFrameSaveButton.Size = new System.Drawing.Size(75, 23);
             this.keyFrameSaveButton.TabIndex = 11;
@@ -187,7 +191,7 @@
             // ColorSubSamplingLabel
             // 
             this.ColorSubSamplingLabel.AutoSize = true;
-            this.ColorSubSamplingLabel.Location = new System.Drawing.Point(12, 404);
+            this.ColorSubSamplingLabel.Location = new System.Drawing.Point(19, 418);
             this.ColorSubSamplingLabel.Name = "ColorSubSamplingLabel";
             this.ColorSubSamplingLabel.Size = new System.Drawing.Size(92, 13);
             this.ColorSubSamplingLabel.TabIndex = 13;
@@ -195,7 +199,7 @@
             // 
             // colorAinput
             // 
-            this.colorAinput.Location = new System.Drawing.Point(110, 401);
+            this.colorAinput.Location = new System.Drawing.Point(117, 415);
             this.colorAinput.Name = "colorAinput";
             this.colorAinput.Size = new System.Drawing.Size(24, 20);
             this.colorAinput.TabIndex = 14;
@@ -204,7 +208,7 @@
             // 
             // colorBinput
             // 
-            this.colorBinput.Location = new System.Drawing.Point(140, 401);
+            this.colorBinput.Location = new System.Drawing.Point(147, 415);
             this.colorBinput.Name = "colorBinput";
             this.colorBinput.Size = new System.Drawing.Size(24, 20);
             this.colorBinput.TabIndex = 15;
@@ -213,7 +217,7 @@
             // 
             // colorCinput
             // 
-            this.colorCinput.Location = new System.Drawing.Point(170, 401);
+            this.colorCinput.Location = new System.Drawing.Point(177, 415);
             this.colorCinput.Name = "colorCinput";
             this.colorCinput.Size = new System.Drawing.Size(24, 20);
             this.colorCinput.TabIndex = 16;
@@ -285,11 +289,52 @@
             this.multiThreadSaveButton.UseVisualStyleBackColor = true;
             this.multiThreadSaveButton.Click += new System.EventHandler(this.multiThreadSaveButton_Click);
             // 
+            // qualityLabel
+            // 
+            this.qualityLabel.AutoSize = true;
+            this.qualityLabel.Location = new System.Drawing.Point(19, 392);
+            this.qualityLabel.Name = "qualityLabel";
+            this.qualityLabel.Size = new System.Drawing.Size(62, 13);
+            this.qualityLabel.TabIndex = 23;
+            this.qualityLabel.Text = "DCT quality";
+            // 
+            // qualityInput
+            // 
+            this.qualityInput.Location = new System.Drawing.Point(87, 389);
+            this.qualityInput.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.qualityInput.Name = "qualityInput";
+            this.qualityInput.Size = new System.Drawing.Size(51, 20);
+            this.qualityInput.TabIndex = 22;
+            this.qualityInput.Tag = "";
+            this.qualityInput.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.qualityInput.Value = new decimal(new int[] {
+            50,
+            0,
+            0,
+            0});
+            // 
+            // qualitySaveButton
+            // 
+            this.qualitySaveButton.Location = new System.Drawing.Point(144, 387);
+            this.qualitySaveButton.Name = "qualitySaveButton";
+            this.qualitySaveButton.Size = new System.Drawing.Size(75, 23);
+            this.qualitySaveButton.TabIndex = 24;
+            this.qualitySaveButton.Text = "save";
+            this.qualitySaveButton.UseVisualStyleBackColor = true;
+            this.qualitySaveButton.Click += new System.EventHandler(this.qualitySaveButton_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(670, 591);
+            this.Controls.Add(this.qualitySaveButton);
+            this.Controls.Add(this.qualityLabel);
+            this.Controls.Add(this.qualityInput);
             this.Controls.Add(this.multiThreadSaveButton);
             this.Controls.Add(this.multiThreadLabel);
             this.Controls.Add(this.multiThreadInput);
@@ -318,6 +363,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.outputPictureBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.inputPictureBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.multiThreadInput)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.qualityInput)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -347,6 +393,9 @@
         private System.Windows.Forms.NumericUpDown multiThreadInput;
         private System.Windows.Forms.Label multiThreadLabel;
         private System.Windows.Forms.Button multiThreadSaveButton;
+        private System.Windows.Forms.Label qualityLabel;
+        private System.Windows.Forms.NumericUpDown qualityInput;
+        private System.Windows.Forms.Button qualitySaveButton;
     }
 }
 
