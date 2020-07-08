@@ -37,12 +37,6 @@ namespace Codec
         string outputFile = null;
         Image[] outputImages;
 
-
-        // needed for multi huffman encoding
-        int[][] YHuffmanValues;
-        int[][] CbHuffmanValues;
-        int[][] CrHuffmanValues;
-
         int maxThreads = 4;
 
         public Form1()
@@ -115,10 +109,6 @@ namespace Codec
                 YHuffmans = new Huffman<int>[len];
                 CbHuffmans = new Huffman<int>[len];
                 CrHuffmans = new Huffman<int>[len];
-                // init multi huffmans
-                YHuffmanValues = new int[keyFrameEvery][];
-                CbHuffmanValues = new int[keyFrameEvery][];
-                CrHuffmanValues = new int[keyFrameEvery][];
             }
         }
 
@@ -150,9 +140,6 @@ namespace Codec
             if (tempNum > 0 && tempNum <= 60)
             {
                 keyFrameEvery = tempNum;
-                YHuffmanValues = new int[keyFrameEvery][];
-                CbHuffmanValues = new int[keyFrameEvery][];
-                CrHuffmanValues = new int[keyFrameEvery][];
                 timeBar.LargeChange = keyFrameEvery;
                 timeBar.SmallChange = keyFrameEvery;
                 timeBar.TickFrequency = keyFrameEvery;
@@ -452,6 +439,11 @@ namespace Codec
             int[,] yDctQuan, cBDctQuan, cRDctQuan, yDiffEncoded, cBDiffEncoded, cRDiffEncoded;
             int[] yRunLenEncoded, cBRunLenEncoded, cRRunLenEncoded;
 
+            // needed for multi huffman encoding
+            int[][] YHuffmanValues = new int[keyFrameEvery][];
+            int[][] CbHuffmanValues = new int[keyFrameEvery][];
+            int[][] CrHuffmanValues = new int[keyFrameEvery][];
+
             int offset = tempImages.Length / maxThreads;
             int start = threadNum * offset;
             int finish = (threadNum + 1) * offset;
@@ -487,7 +479,7 @@ namespace Codec
                 {
                     lastFrame = true;
                 }
-                MultiHuffmanEncoding(i, yRunLenEncoded, cBRunLenEncoded, cRRunLenEncoded, lastFrame);
+                MultiHuffmanEncoding(i, yRunLenEncoded, cBRunLenEncoded, cRRunLenEncoded, lastFrame, YHuffmanValues, CbHuffmanValues, CrHuffmanValues);
 
                 // Tester.PrintToFile("huffmanBefore", YBitArray);
 
@@ -606,7 +598,7 @@ namespace Codec
             }
         }
 
-        private void MultiHuffmanEncoding(int i, int[] yRunLenEncoded, int[] cBRunLenEncoded, int[] cRRunLenEncoded, bool isLastFrame)
+        private void MultiHuffmanEncoding(int i, int[] yRunLenEncoded, int[] cBRunLenEncoded, int[] cRRunLenEncoded, bool isLastFrame, int[][] YHuffmanValues, int[][] CbHuffmanValues, int[][] CrHuffmanValues)
         {
             YHuffmanValues[i % keyFrameEvery] = yRunLenEncoded;
             CbHuffmanValues[i % keyFrameEvery] = cBRunLenEncoded;
