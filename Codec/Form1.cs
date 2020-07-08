@@ -69,7 +69,7 @@ namespace Codec
                 var count = 0;
 
                 // TODO: use full video?
-                while (hasFrame == true && count < 40)
+                while (hasFrame == true)
                 {
                     using (MemoryStream stream = new MemoryStream())
                     {
@@ -423,10 +423,20 @@ namespace Codec
             // needed to update UI
             this.Update();
 
+            int len = tempImages.Length;
+            int threadsXkeyFrames = maxThreads * keyFrameEvery;
+            int possibleMultiFors = len / threadsXkeyFrames;
+
             Parallel.For(0, maxThreads, (i) =>
             {
-                ParallelEncoding(i);
+                ParallelEncoding(i, possibleMultiFors);
             });
+
+            if(len % threadsXkeyFrames != 0)
+            {
+                int end = possibleMultiFors * keyFrameEvery * maxThreads;
+                ParallelEncoding(0, possibleMultiFors, end);
+            }
 
             progressLabel.Visible = false;
             progressBar.Visible = false;
@@ -434,7 +444,7 @@ namespace Codec
             this.Update();
         }
 
-        public void ParallelEncoding(int threadNum)
+        public void ParallelEncoding(int threadNum, int possibleMultiFors, int? startValue = null)
         {
             int[,] yDctQuan, cBDctQuan, cRDctQuan, yDiffEncoded, cBDiffEncoded, cRDiffEncoded;
             int[] yRunLenEncoded, cBRunLenEncoded, cRRunLenEncoded;
@@ -444,9 +454,20 @@ namespace Codec
             int[][] CbHuffmanValues = new int[keyFrameEvery][];
             int[][] CrHuffmanValues = new int[keyFrameEvery][];
 
-            int offset = tempImages.Length / maxThreads;
-            int start = threadNum * offset;
-            int finish = (threadNum + 1) * offset;
+            int offset = possibleMultiFors * keyFrameEvery;
+            int start;
+            int finish;
+
+            if (startValue != null)
+            {
+                start = (int)startValue;
+                finish = tempImages.Length;
+            } else
+            {
+                start = threadNum * offset;
+                finish = (threadNum + 1) * offset;
+            }
+            
 
             for (int i = start; i < finish; i++)
             {

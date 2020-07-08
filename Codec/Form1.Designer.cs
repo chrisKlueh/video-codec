@@ -250,7 +250,7 @@
             // 
             this.multiThreadInput.Location = new System.Drawing.Point(607, 401);
             this.multiThreadInput.Maximum = new decimal(new int[] {
-            8,
+            16,
             0,
             0,
             0});
