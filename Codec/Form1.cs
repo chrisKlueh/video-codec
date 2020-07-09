@@ -68,9 +68,6 @@ namespace Codec
                 var hasFrame = true;
                 var count = 0;
 
-
-
-                // TODO: use full video?
                 while (hasFrame == true && (!frameLimiter.Checked || count < Decimal.ToInt32(frameInput.Value)))
                 {
                     using (MemoryStream stream = new MemoryStream())
@@ -91,6 +88,7 @@ namespace Codec
                 }
                 inputImages = Array.ConvertAll(inputImagesAL.ToArray(), image => (Image)image);
                 inputPictureBox.Image = inputImages[timeBar.Value];
+                progressBar.Maximum = count + 1;
                 progressLabel.Visible = false;
                 progressBar.Visible = false;
 
