@@ -192,6 +192,7 @@ namespace Codec
         {
             // Convert RGB images to YCbCr images
             RGBToYCbCr();
+            GC.Collect();
 
             progressLabel.Text = "Chroma subsampling...";
             progressLabel.Visible = true;
@@ -219,6 +220,11 @@ namespace Codec
             {
                 tempImages[i].SetSubsamplingMode(subsamplingMode);
                 progressBar.Value = i;
+
+                if(i % keyFrameEvery == 0)
+                {
+                    GC.Collect();
+                }
             }
 
             progressLabel.Visible = false;
@@ -235,17 +241,18 @@ namespace Codec
             encodingFormatter.Serialize(encodingStream, outputVideo);
             encodingStream.Close();
 
-            // Garbage collection
-            for (int i = 0; i < tempImages.Length; i++)
-            {
-                tempImages[i] = null;
-                YHuffmans[i / keyFrameEvery] = null;
-                CbHuffmans[i / keyFrameEvery] = null;
-                CrHuffmans[i / keyFrameEvery] = null;
-                YBitArray[i] = null;
-                CbBitArray[i] = null;
-                CrBitArray[i] = null;
-            }
+            //// Garbage collection
+            int tempImagesLen = tempImages.Length;
+            int huffmansLen = YHuffmans.Length;
+            int bitArrayLen = YBitArray.Length;
+            tempImages = new YCbCrImage[tempImagesLen];
+            YHuffmans = new Huffman<int>[huffmansLen];
+            CbHuffmans = new Huffman<int>[huffmansLen];
+            CrHuffmans = new Huffman<int>[huffmansLen];
+            YBitArray = new List<int>[bitArrayLen];
+            CbBitArray = new List<int>[bitArrayLen];
+            CrBitArray = new List<int>[bitArrayLen];
+            GC.Collect();
 
             ///////////////////////////////////////
             /// Encoding done - file saved.
@@ -261,13 +268,14 @@ namespace Codec
             VideoFile inputVideo = (VideoFile)decodingFormatter.Deserialize(decodingStream);
             outputSizeLabel.Text = "Output file size: " + BytesToString(decodingStream.Length);
             decodingStream.Close();
+            GC.Collect();
 
             //DCT & Quantization & Differential Decoding & Run Lenght Decoding & Huffman Decoding
             Decoding(inputVideo);
 
             // Convert YCbCr images to RGB images
             YCbCrToRGB();
-
+            GC.Collect();
         }
 
         #region Helper Methods
@@ -396,6 +404,11 @@ namespace Codec
                 }
                 outputImages[i] = bitmap;
                 progressBar.Value = i;
+
+                if(i % keyFrameEvery == 0)
+                {
+                    GC.Collect();
+                }
             }
 
             progressLabel.Visible = false;
@@ -434,6 +447,7 @@ namespace Codec
             Parallel.For(0, maxThreads, (i) =>
             {
                 ParallelEncoding(i, possibleMultiFors);
+                GC.Collect();
             });
 
             if(len % threadsXkeyFrames != 0)
@@ -454,6 +468,8 @@ namespace Codec
                     ParallelEncoding(0, possibleMultiFors, tempImages.Length - leftOvers);
                 }
             }
+
+            GC.Collect();
 
             progressLabel.Visible = false;
             progressBar.Visible = false;
@@ -556,9 +572,14 @@ namespace Codec
             // needed to update UI
             this.Update();
 
+            YBitArray = toIntListArray(video.YBitArray);
+            CbBitArray = toIntListArray(video.CbBitArray);
+            CrBitArray = toIntListArray(video.CrBitArray);
+
             Parallel.For(0, maxThreads, (i) =>
             {
                 ParallelDecoding(i, video);
+                GC.Collect();
             });
 
             progressLabel.Visible = false;
@@ -571,10 +592,6 @@ namespace Codec
         {
             int[,] yDctQuan, cBDctQuan, cRDctQuan, yDiffEncoded, cBDiffEncoded, cRDiffEncoded;
             int[] yRunLenEncoded, cBRunLenEncoded, cRRunLenEncoded;
-
-            YBitArray = toIntListArray(video.YBitArray);
-            CbBitArray = toIntListArray(video.CbBitArray);
-            CrBitArray = toIntListArray(video.CrBitArray);
 
             int offset = tempImages.Length / maxThreads;
             int start = threadNum * offset;
