@@ -68,6 +68,11 @@ namespace Codec
                 var hasFrame = true;
                 var count = 0;
 
+                if(frameLimiter.Checked)
+                {
+                    progressBar.Maximum = Decimal.ToInt32(frameInput.Value);
+                }
+
                 while (hasFrame == true && (!frameLimiter.Checked || count < Decimal.ToInt32(frameInput.Value)))
                 {
                     using (MemoryStream stream = new MemoryStream())

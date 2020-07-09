@@ -297,13 +297,13 @@
             this.qualityLabel.AutoSize = true;
             this.qualityLabel.Location = new System.Drawing.Point(19, 392);
             this.qualityLabel.Name = "qualityLabel";
-            this.qualityLabel.Size = new System.Drawing.Size(62, 13);
+            this.qualityLabel.Size = new System.Drawing.Size(39, 13);
             this.qualityLabel.TabIndex = 23;
-            this.qualityLabel.Text = "DCT quality";
+            this.qualityLabel.Text = "Quality";
             // 
             // qualityInput
             // 
-            this.qualityInput.Location = new System.Drawing.Point(87, 389);
+            this.qualityInput.Location = new System.Drawing.Point(60, 388);
             this.qualityInput.Minimum = new decimal(new int[] {
             1,
             0,
@@ -322,7 +322,7 @@
             // 
             // qualitySaveButton
             // 
-            this.qualitySaveButton.Location = new System.Drawing.Point(144, 387);
+            this.qualitySaveButton.Location = new System.Drawing.Point(117, 386);
             this.qualitySaveButton.Name = "qualitySaveButton";
             this.qualitySaveButton.Size = new System.Drawing.Size(75, 23);
             this.qualitySaveButton.TabIndex = 24;
