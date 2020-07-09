@@ -53,11 +53,14 @@
             this.qualityLabel = new System.Windows.Forms.Label();
             this.qualityInput = new System.Windows.Forms.NumericUpDown();
             this.qualitySaveButton = new System.Windows.Forms.Button();
+            this.frameInput = new System.Windows.Forms.NumericUpDown();
+            this.frameLimiter = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.timeBar)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.outputPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.inputPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.multiThreadInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.qualityInput)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.frameInput)).BeginInit();
             this.SuspendLayout();
             // 
             // inputSizeLabel
@@ -160,7 +163,7 @@
             // playButton
             // 
             this.playButton.Image = global::Codec.Properties.Resources.playButton1;
-            this.playButton.Location = new System.Drawing.Point(302, 280);
+            this.playButton.Location = new System.Drawing.Point(261, 280);
             this.playButton.Name = "playButton";
             this.playButton.Size = new System.Drawing.Size(143, 50);
             this.playButton.TabIndex = 12;
@@ -229,7 +232,7 @@
             this.inputCheckBox.AutoSize = true;
             this.inputCheckBox.Checked = true;
             this.inputCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.inputCheckBox.Location = new System.Drawing.Point(222, 284);
+            this.inputCheckBox.Location = new System.Drawing.Point(181, 284);
             this.inputCheckBox.Name = "inputCheckBox";
             this.inputCheckBox.Size = new System.Drawing.Size(72, 17);
             this.inputCheckBox.TabIndex = 17;
@@ -239,7 +242,7 @@
             // outputCheckBox
             // 
             this.outputCheckBox.AutoSize = true;
-            this.outputCheckBox.Location = new System.Drawing.Point(222, 308);
+            this.outputCheckBox.Location = new System.Drawing.Point(181, 308);
             this.outputCheckBox.Name = "outputCheckBox";
             this.outputCheckBox.Size = new System.Drawing.Size(79, 17);
             this.outputCheckBox.TabIndex = 18;
@@ -327,11 +330,49 @@
             this.qualitySaveButton.UseVisualStyleBackColor = true;
             this.qualitySaveButton.Click += new System.EventHandler(this.qualitySaveButton_Click);
             // 
+            // frameInput
+            // 
+            this.frameInput.Location = new System.Drawing.Point(410, 306);
+            this.frameInput.Maximum = new decimal(new int[] {
+            300,
+            0,
+            0,
+            0});
+            this.frameInput.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.frameInput.Name = "frameInput";
+            this.frameInput.Size = new System.Drawing.Size(51, 20);
+            this.frameInput.TabIndex = 25;
+            this.frameInput.Tag = "";
+            this.frameInput.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.frameInput.Value = new decimal(new int[] {
+            30,
+            0,
+            0,
+            0});
+            // 
+            // frameLimiter
+            // 
+            this.frameLimiter.AutoSize = true;
+            this.frameLimiter.Checked = true;
+            this.frameLimiter.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.frameLimiter.Location = new System.Drawing.Point(410, 286);
+            this.frameLimiter.Name = "frameLimiter";
+            this.frameLimiter.Size = new System.Drawing.Size(131, 17);
+            this.frameLimiter.TabIndex = 26;
+            this.frameLimiter.Text = "Limit number of frames";
+            this.frameLimiter.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(670, 591);
+            this.Controls.Add(this.frameLimiter);
+            this.Controls.Add(this.frameInput);
             this.Controls.Add(this.qualitySaveButton);
             this.Controls.Add(this.qualityLabel);
             this.Controls.Add(this.qualityInput);
@@ -364,6 +405,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.inputPictureBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.multiThreadInput)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.qualityInput)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.frameInput)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -396,6 +438,8 @@
         private System.Windows.Forms.Label qualityLabel;
         private System.Windows.Forms.NumericUpDown qualityInput;
         private System.Windows.Forms.Button qualitySaveButton;
+        private System.Windows.Forms.NumericUpDown frameInput;
+        private System.Windows.Forms.CheckBox frameLimiter;
     }
 }
 

@@ -68,8 +68,10 @@ namespace Codec
                 var hasFrame = true;
                 var count = 0;
 
+
+
                 // TODO: use full video?
-                while (hasFrame == true)
+                while (hasFrame == true && (!frameLimiter.Checked || count < Decimal.ToInt32(frameInput.Value)))
                 {
                     using (MemoryStream stream = new MemoryStream())
                     {
@@ -595,7 +597,7 @@ namespace Codec
 
             int offset = tempImages.Length / maxThreads;
             int start = threadNum * offset;
-            int finish = (threadNum + 1) * offset;
+            int finish = threadNum != (maxThreads - 1) ? (threadNum + 1) * offset : tempImages.Length;
 
             for (int i = start; i < finish; i++)
             {
