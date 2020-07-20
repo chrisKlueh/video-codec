@@ -207,7 +207,7 @@ namespace Codec
             return resultMatrix;
         }
 
-        //Halleluja http://www.informatik.uni-hamburg.de/TKRN/world/students/ts/dct.html
+        // http://www.informatik.uni-hamburg.de/TKRN/world/students/ts/dct.html
         private double[,] Dct(double[,] subArray)
         {
             double[,] res = new double[8,8];
@@ -230,7 +230,7 @@ namespace Codec
             return res;
         }
 
-        //Jesus lebt http://www.informatik.uni-hamburg.de/TKRN/world/students/ts/jsidct.html
+        // http://www.informatik.uni-hamburg.de/TKRN/world/students/ts/jsidct.html
         private double[,] InvertDct(double[,] subArray)
         {
             double[,] res = new double[8, 8];

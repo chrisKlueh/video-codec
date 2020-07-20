@@ -42,6 +42,7 @@ namespace Codec
         public Form1()
         {
             InitializeComponent();
+            chromaBox.SetItemChecked(0, true);
         }
 
         // If no input file is selected, clicking the input picture makes the user choose a file.
@@ -208,18 +209,13 @@ namespace Codec
 
             // Color subsampling
             string subsamplingMode = "4:4:4";
-            int B = Int32.Parse(colorBinput.Text);
-            int C = Int32.Parse(colorCinput.Text);
-            if (B == 2)
+            if (chromaBox.SelectedIndex == 1)
             {
-                if (C == 2)
-                {
-                    subsamplingMode = "4:2:2";
-                }
-                else if (C == 0)
-                {
-                    subsamplingMode = "4:2:0";
-                }
+                subsamplingMode = "4:2:2";
+            }
+            else if (chromaBox.SelectedIndex == 2)
+            {
+                subsamplingMode = "4:2:0";
             }
             for (int i = 0; i < tempImages.Length; i++)
             {
@@ -755,5 +751,20 @@ namespace Codec
         }
 
         #endregion
+
+        // only allow one item to be checked in the chroma box
+        private void chromaBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            int iSelectedIndex = chromaBox.SelectedIndex;
+            if (iSelectedIndex == -1)
+            {
+                return;
+            }
+            for (int iIndex = 0; iIndex < chromaBox.Items.Count; iIndex++)
+            {
+                chromaBox.SetItemCheckState(iIndex, CheckState.Unchecked);
+            }
+            chromaBox.SetItemCheckState(iSelectedIndex, CheckState.Checked);
+        }
     }
 }

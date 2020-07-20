@@ -42,9 +42,6 @@
             this.outputPictureBox = new System.Windows.Forms.PictureBox();
             this.inputPictureBox = new System.Windows.Forms.PictureBox();
             this.ColorSubSamplingLabel = new System.Windows.Forms.Label();
-            this.colorAinput = new System.Windows.Forms.TextBox();
-            this.colorBinput = new System.Windows.Forms.TextBox();
-            this.colorCinput = new System.Windows.Forms.TextBox();
             this.inputCheckBox = new System.Windows.Forms.CheckBox();
             this.outputCheckBox = new System.Windows.Forms.CheckBox();
             this.multiThreadInput = new System.Windows.Forms.NumericUpDown();
@@ -55,6 +52,7 @@
             this.qualitySaveButton = new System.Windows.Forms.Button();
             this.frameInput = new System.Windows.Forms.NumericUpDown();
             this.frameLimiter = new System.Windows.Forms.CheckBox();
+            this.chromaBox = new System.Windows.Forms.CheckedListBox();
             ((System.ComponentModel.ISupportInitialize)(this.timeBar)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.outputPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.inputPictureBox)).BeginInit();
@@ -125,7 +123,7 @@
             // 
             // keyFrameInput
             // 
-            this.keyFrameInput.Location = new System.Drawing.Point(108, 440);
+            this.keyFrameInput.Location = new System.Drawing.Point(108, 421);
             this.keyFrameInput.Name = "keyFrameInput";
             this.keyFrameInput.Size = new System.Drawing.Size(33, 20);
             this.keyFrameInput.TabIndex = 8;
@@ -135,7 +133,7 @@
             // keyFrameLabel1
             // 
             this.keyFrameLabel1.AutoSize = true;
-            this.keyFrameLabel1.Location = new System.Drawing.Point(19, 443);
+            this.keyFrameLabel1.Location = new System.Drawing.Point(19, 424);
             this.keyFrameLabel1.Name = "keyFrameLabel1";
             this.keyFrameLabel1.Size = new System.Drawing.Size(83, 13);
             this.keyFrameLabel1.TabIndex = 9;
@@ -144,7 +142,7 @@
             // keyFrameLabel2
             // 
             this.keyFrameLabel2.AutoSize = true;
-            this.keyFrameLabel2.Location = new System.Drawing.Point(147, 443);
+            this.keyFrameLabel2.Location = new System.Drawing.Point(147, 424);
             this.keyFrameLabel2.Name = "keyFrameLabel2";
             this.keyFrameLabel2.Size = new System.Drawing.Size(38, 13);
             this.keyFrameLabel2.TabIndex = 10;
@@ -152,7 +150,7 @@
             // 
             // keyFrameSaveButton
             // 
-            this.keyFrameSaveButton.Location = new System.Drawing.Point(191, 438);
+            this.keyFrameSaveButton.Location = new System.Drawing.Point(191, 419);
             this.keyFrameSaveButton.Name = "keyFrameSaveButton";
             this.keyFrameSaveButton.Size = new System.Drawing.Size(75, 23);
             this.keyFrameSaveButton.TabIndex = 11;
@@ -194,38 +192,11 @@
             // ColorSubSamplingLabel
             // 
             this.ColorSubSamplingLabel.AutoSize = true;
-            this.ColorSubSamplingLabel.Location = new System.Drawing.Point(19, 418);
+            this.ColorSubSamplingLabel.Location = new System.Drawing.Point(19, 454);
             this.ColorSubSamplingLabel.Name = "ColorSubSamplingLabel";
             this.ColorSubSamplingLabel.Size = new System.Drawing.Size(92, 13);
             this.ColorSubSamplingLabel.TabIndex = 13;
             this.ColorSubSamplingLabel.Text = "Color subsampling";
-            // 
-            // colorAinput
-            // 
-            this.colorAinput.Location = new System.Drawing.Point(117, 415);
-            this.colorAinput.Name = "colorAinput";
-            this.colorAinput.Size = new System.Drawing.Size(24, 20);
-            this.colorAinput.TabIndex = 14;
-            this.colorAinput.Text = "4";
-            this.colorAinput.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
-            // colorBinput
-            // 
-            this.colorBinput.Location = new System.Drawing.Point(147, 415);
-            this.colorBinput.Name = "colorBinput";
-            this.colorBinput.Size = new System.Drawing.Size(24, 20);
-            this.colorBinput.TabIndex = 15;
-            this.colorBinput.Text = "2";
-            this.colorBinput.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
-            // colorCinput
-            // 
-            this.colorCinput.Location = new System.Drawing.Point(177, 415);
-            this.colorCinput.Name = "colorCinput";
-            this.colorCinput.Size = new System.Drawing.Size(24, 20);
-            this.colorCinput.TabIndex = 16;
-            this.colorCinput.Text = "2";
-            this.colorCinput.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // inputCheckBox
             // 
@@ -366,11 +337,26 @@
             this.frameLimiter.Text = "Limit number of frames";
             this.frameLimiter.UseVisualStyleBackColor = true;
             // 
+            // chromaBox
+            // 
+            this.chromaBox.CheckOnClick = true;
+            this.chromaBox.FormattingEnabled = true;
+            this.chromaBox.Items.AddRange(new object[] {
+            "4:4:4",
+            "4:2:2",
+            "4:2:0"});
+            this.chromaBox.Location = new System.Drawing.Point(117, 454);
+            this.chromaBox.Name = "chromaBox";
+            this.chromaBox.Size = new System.Drawing.Size(53, 49);
+            this.chromaBox.TabIndex = 27;
+            this.chromaBox.SelectedIndexChanged += new System.EventHandler(this.chromaBox_SelectedIndexChanged);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(670, 591);
+            this.Controls.Add(this.chromaBox);
             this.Controls.Add(this.frameLimiter);
             this.Controls.Add(this.frameInput);
             this.Controls.Add(this.qualitySaveButton);
@@ -381,9 +367,6 @@
             this.Controls.Add(this.multiThreadInput);
             this.Controls.Add(this.outputCheckBox);
             this.Controls.Add(this.inputCheckBox);
-            this.Controls.Add(this.colorCinput);
-            this.Controls.Add(this.colorBinput);
-            this.Controls.Add(this.colorAinput);
             this.Controls.Add(this.ColorSubSamplingLabel);
             this.Controls.Add(this.playButton);
             this.Controls.Add(this.keyFrameSaveButton);
@@ -427,9 +410,6 @@
         private System.Windows.Forms.Button keyFrameSaveButton;
         private System.Windows.Forms.Button playButton;
         private System.Windows.Forms.Label ColorSubSamplingLabel;
-        private System.Windows.Forms.TextBox colorAinput;
-        private System.Windows.Forms.TextBox colorBinput;
-        private System.Windows.Forms.TextBox colorCinput;
         private System.Windows.Forms.CheckBox inputCheckBox;
         private System.Windows.Forms.CheckBox outputCheckBox;
         private System.Windows.Forms.NumericUpDown multiThreadInput;
@@ -440,6 +420,7 @@
         private System.Windows.Forms.Button qualitySaveButton;
         private System.Windows.Forms.NumericUpDown frameInput;
         private System.Windows.Forms.CheckBox frameLimiter;
+        private System.Windows.Forms.CheckedListBox chromaBox;
     }
 }
 
