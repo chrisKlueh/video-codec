@@ -59,8 +59,9 @@ namespace Codec
         public YCbCrPixel[,] pixels;
         public string subsamplingMode = "4:4:4";
 
-        public YCbCrImage(int width, int height)
+        public YCbCrImage(int width, int height, string subsamplingMode)
         {
+            this.subsamplingMode = subsamplingMode;
             this.width = width;
             this.height = height;
             pixels = new YCbCrPixel[width, height];
@@ -139,9 +140,8 @@ namespace Codec
             return pixels[x, y];
         }
 
-        public void SetSubsamplingMode(string subsamplingMode)
+        public void SetSubsamplingMode()
         {
-            this.subsamplingMode = subsamplingMode;
             if(subsamplingMode == "4:2:2")
             {
                 for(int x = 0; x < width; x++)

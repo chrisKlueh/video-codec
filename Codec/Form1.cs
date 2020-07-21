@@ -37,6 +37,8 @@ namespace Codec
         string outputFile = null;
         Image[] outputImages;
 
+        public string subsamplingMode = "4:4:4";
+
         int maxThreads = 4;
 
         public Form1()
@@ -207,19 +209,9 @@ namespace Codec
             // needed to update UI
             this.Update();
 
-            // Color subsampling
-            string subsamplingMode = "4:4:4";
-            if (chromaBox.SelectedIndex == 1)
-            {
-                subsamplingMode = "4:2:2";
-            }
-            else if (chromaBox.SelectedIndex == 2)
-            {
-                subsamplingMode = "4:2:0";
-            }
             for (int i = 0; i < tempImages.Length; i++)
             {
-                tempImages[i].SetSubsamplingMode(subsamplingMode);
+                tempImages[i].SetSubsamplingMode();
                 progressBar.Value = i;
 
                 if(i % keyFrameEvery == 0)
@@ -235,7 +227,7 @@ namespace Codec
             Encoding();
 
             // Save our video file
-            VideoFile outputVideo = new VideoFile(keyFrameEvery, quality, width, height, toBitArrayArray(YBitArray), toBitArrayArray(CbBitArray), toBitArrayArray(CrBitArray), YHuffmans, CbHuffmans, CrHuffmans);
+            VideoFile outputVideo = new VideoFile(keyFrameEvery, quality, width, height, subsamplingMode, toBitArrayArray(YBitArray), toBitArrayArray(CbBitArray), toBitArrayArray(CrBitArray), YHuffmans, CbHuffmans, CrHuffmans);
 
             IFormatter encodingFormatter = new BinaryFormatter();
             Stream encodingStream = new FileStream("akyio.bfv", FileMode.Create, FileAccess.Write, FileShare.None);
@@ -343,7 +335,7 @@ namespace Codec
             for (int i = 0; i < inputImages.Length; i++)
             {
                 Bitmap bitmap = new Bitmap(inputImages[i]);
-                YCbCrImage yCbCrImage = new YCbCrImage(bitmap.Width, bitmap.Height);
+                YCbCrImage yCbCrImage = new YCbCrImage(bitmap.Width, bitmap.Height, subsamplingMode);
                 for (int x = 0; x < bitmap.Width; x++)
                 {
                     for (int y = 0; y < bitmap.Height; y++)
@@ -573,6 +565,8 @@ namespace Codec
             // needed to update UI
             this.Update();
 
+            subsamplingMode = video.subsamplingMode;
+
             YBitArray = toIntListArray(video.YBitArray);
             CbBitArray = toIntListArray(video.CbBitArray);
             CrBitArray = toIntListArray(video.CrBitArray);
@@ -622,7 +616,7 @@ namespace Codec
                 //Tester.PrintToFile("yDctQuanAfter", yDctQuan);
 
                 // revert dct and quantization
-                DctImage dctImage = new DctImage(quality);
+                DctImage dctImage = new DctImage(quality, subsamplingMode);
                 int[,] YMatrix = dctImage.RevertDctAndQuantization(yDctQuan);
                 int[,] CbMatrix = dctImage.RevertDctAndQuantization(cBDctQuan);
                 int[,] CrMatrix = dctImage.RevertDctAndQuantization(cRDctQuan);
@@ -632,7 +626,7 @@ namespace Codec
                 CrMatrix = dctImage.TrimValueMatrix(CrMatrix, video.width, video.height);
 
                 // instantiate YCbCr images
-                YCbCrImage tempImage = new YCbCrImage(YMatrix.GetLength(0), YMatrix.GetLength(1));
+                YCbCrImage tempImage = new YCbCrImage(YMatrix.GetLength(0), YMatrix.GetLength(1), subsamplingMode);
                 for (int j = 0; j < YMatrix.GetLength(0); j++)
                 {
                     for (int k = 0; k < YMatrix.GetLength(1); k++)
@@ -765,6 +759,16 @@ namespace Codec
                 chromaBox.SetItemCheckState(iIndex, CheckState.Unchecked);
             }
             chromaBox.SetItemCheckState(iSelectedIndex, CheckState.Checked);
+            if(iSelectedIndex == 0)
+            {
+                subsamplingMode = "4:4:4";
+            } else if (iSelectedIndex == 1)
+            {
+                subsamplingMode = "4:2:2";
+            } else if (iSelectedIndex == 2)
+            {
+                subsamplingMode = "4:2:0";
+            }
         }
     }
 }
