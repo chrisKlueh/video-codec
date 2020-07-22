@@ -5,6 +5,8 @@ namespace Codec
     class DctImage
     {
         private YCbCrImage image;
+
+        public string subsamplingMode = "4:4:4";
         
         //qualityFactor range from 1 to 100; 
         //50 = no change to base matrix used for quantization; 
@@ -28,9 +30,10 @@ namespace Codec
         /////Constructors
         ////////////////////////////////////////////////////////////////////////////////
 
-        public DctImage(int qualityFactor)
+        public DctImage(int qualityFactor, string subsamplingMode)
         {
             this.image = null;
+            this.subsamplingMode = subsamplingMode;
             //set qualityFactor to 50 (=base quantization matrix) if given qualityFactor is not in defined range
             this.qualityFactor = (qualityFactor > 0) && (qualityFactor <= 100) ? qualityFactor : 50;
             CalculateQuantizationMatrix(this.qualityFactor);
@@ -39,6 +42,7 @@ namespace Codec
         public DctImage(YCbCrImage image)
         {
             this.image = image;
+            subsamplingMode = image.subsamplingMode;
             //set qualityFactor to 50 (=base quantization matrix)
             this.qualityFactor = 50;
             CalculateQuantizationMatrix(this.qualityFactor);
@@ -47,6 +51,7 @@ namespace Codec
         public DctImage(YCbCrImage image, int qualityFactor)
         {
             this.image = image;
+            subsamplingMode = image.subsamplingMode;
             //set qualityFactor to 50 (=base quantization matrix) if given qualityFactor is not in defined range
             this.qualityFactor = (qualityFactor > 0) && (qualityFactor <= 100) ? qualityFactor : 50;
             CalculateQuantizationMatrix(this.qualityFactor);
@@ -78,30 +83,77 @@ namespace Codec
         //create a matrix containing only Y, Cb or Cr values
         public double[,] FillValueMatrix(YCbCrImage image, String channelString)
         {
-            double[,] valueMatrix = new double[image.width, image.height];
-            for (int height = 0; height < image.height; height++)
+            double[,] valueMatrix = null;
+
+            // only save every Nth pixel depending on subsampling mode / channel string
+            if (subsamplingMode == "4:4:4" || channelString == "Y")
             {
-                for (int width = 0; width < image.width; width++)
+                valueMatrix = new double[image.width, image.height];
+                for (int height = 0; height < image.height; height++)
                 {
-                    YCbCrPixel pixel = image.GetPixel(width, height);
-
-                    switch (channelString)
+                    for (int width = 0; width < image.width; width++)
                     {
-                        case "Y":
-                            valueMatrix[width, height] = pixel.getY();
-                            break;
-                        case "Cb":
-                            valueMatrix[width, height] = pixel.getCb();
-                            break;
-                        case "Cr":
-                            valueMatrix[width, height] = pixel.getCr();
-                            break;
-                        default:
-                            break;
+                        YCbCrPixel pixel = image.GetPixel(width, height);
+                        switch (channelString)
+                        {
+                            case "Y":
+                                valueMatrix[width, height] = pixel.getY();
+                                break;
+                            case "Cb":
+                                valueMatrix[width, height] = pixel.getCb();
+                                break;
+                            case "Cr":
+                                valueMatrix[width, height] = pixel.getCr();
+                                break;
+                            default:
+                                break;
+                        }
                     }
-
+                }
+            } else if (subsamplingMode == "4:2:2")
+            {
+                valueMatrix = new double[image.width / 2, image.height];
+                for (int height = 0; height < image.height; height++)
+                {
+                    for (int width = 0; width < image.width; width += 2)
+                    {
+                        YCbCrPixel pixel = image.GetPixel(width, height);
+                        switch (channelString)
+                        {
+                            case "Cb":
+                                valueMatrix[width / 2, height] = pixel.getCb();
+                                break;
+                            case "Cr":
+                                valueMatrix[width / 2, height] = pixel.getCr();
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+            } else if (subsamplingMode == "4:2:0")
+            {
+                valueMatrix = new double[image.width / 2, image.height / 2];
+                for (int height = 0; height < image.height; height += 2)
+                {
+                    for (int width = 0; width < image.width; width += 2)
+                    {
+                        YCbCrPixel pixel = image.GetPixel(width, height);
+                        switch (channelString)
+                        {
+                            case "Cb":
+                                valueMatrix[width / 2, height / 2] = pixel.getCb();
+                                break;
+                            case "Cr":
+                                valueMatrix[width / 2, height / 2] = pixel.getCr();
+                                break;
+                            default:
+                                break;
+                        }
+                    }
                 }
             }
+
             return valueMatrix;
         }
 

@@ -14,6 +14,7 @@ namespace Codec
         public int quality;
         public int width;
         public int height;
+        public string subsamplingMode;
         public BitArray[] YBitArray;
         public BitArray[] CbBitArray;
         public BitArray[] CrBitArray;
@@ -21,12 +22,13 @@ namespace Codec
         public Huffman<int>[] CbHuffmans;
         public Huffman<int>[] CrHuffmans;
 
-        public VideoFile(int keyFrameEvery, int quality, int width, int height, BitArray[] YBitArray, BitArray[] CbBitArray, BitArray[] CrBitArray, Huffman<int>[] YHuffmans, Huffman<int>[] CbHuffmans, Huffman<int>[] CrHuffmans)
+        public VideoFile(int keyFrameEvery, int quality, int width, int height, string subsamplingMode, BitArray[] YBitArray, BitArray[] CbBitArray, BitArray[] CrBitArray, Huffman<int>[] YHuffmans, Huffman<int>[] CbHuffmans, Huffman<int>[] CrHuffmans)
         {
             this.keyFrameEvery = keyFrameEvery;
             this.quality = quality;
             this.width = width;
             this.height = height;
+            this.subsamplingMode = subsamplingMode;
             this.YBitArray = YBitArray;
             this.CbBitArray = CbBitArray;
             this.CrBitArray = CrBitArray;
