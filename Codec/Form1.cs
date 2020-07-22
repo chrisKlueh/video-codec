@@ -202,27 +202,6 @@ namespace Codec
             RGBToYCbCr();
             GC.Collect();
 
-            progressLabel.Text = "Chroma subsampling...";
-            progressLabel.Visible = true;
-            progressBar.Value = 0;
-            progressBar.Visible = true;
-            // needed to update UI
-            this.Update();
-
-            for (int i = 0; i < tempImages.Length; i++)
-            {
-                tempImages[i].SetSubsamplingMode();
-                progressBar.Value = i;
-
-                if(i % keyFrameEvery == 0)
-                {
-                    GC.Collect();
-                }
-            }
-
-            progressLabel.Visible = false;
-            progressBar.Visible = false;
-
             //DCT & Quantization & Differential Encoding & Run Lenght Encoding & Huffman Encoding
             Encoding();
 
@@ -508,9 +487,22 @@ namespace Codec
                 cBDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cb");
                 cRDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cr");
 
-                yDctQuan = dctImage.TrimValueMatrix(yDctQuan, width, height);
-                cBDctQuan = dctImage.TrimValueMatrix(cBDctQuan, width, height);
-                cRDctQuan = dctImage.TrimValueMatrix(cRDctQuan, width, height);
+                if(subsamplingMode == "4:4:4")
+                {
+                    yDctQuan = dctImage.TrimValueMatrix(yDctQuan, width, height);
+                    cBDctQuan = dctImage.TrimValueMatrix(cBDctQuan, width, height);
+                    cRDctQuan = dctImage.TrimValueMatrix(cRDctQuan, width, height);
+                } else if (subsamplingMode == "4:2:2")
+                {
+                    yDctQuan = dctImage.TrimValueMatrix(yDctQuan, width, height);
+                    cBDctQuan = dctImage.TrimValueMatrix(cBDctQuan, width / 2, height);
+                    cRDctQuan = dctImage.TrimValueMatrix(cRDctQuan, width / 2, height);
+                } else if (subsamplingMode == "4:2:0")
+                {
+                    yDctQuan = dctImage.TrimValueMatrix(yDctQuan, width, height);
+                    cBDctQuan = dctImage.TrimValueMatrix(cBDctQuan, width / 2, height / 2);
+                    cRDctQuan = dctImage.TrimValueMatrix(cRDctQuan, width / 2, height / 2);
+                }
 
                 // Tester.PrintToFile("yDctQuanBefore", yDctQuan);
 
@@ -602,9 +594,24 @@ namespace Codec
                 //Tester.PrintToFile("yRunLenEncodedAfter", yRunLenEncoded);
 
                 // run length decoding
-                yDiffEncoded = RunLengthEncode.Decode(yRunLenEncoded, 8, video.width, video.height);
-                cBDiffEncoded = RunLengthEncode.Decode(cBRunLenEncoded, 8, video.width, video.height);
-                cRDiffEncoded = RunLengthEncode.Decode(cRRunLenEncoded, 8, video.width, video.height);
+                if (subsamplingMode == "4:4:4")
+                {
+                    yDiffEncoded = RunLengthEncode.Decode(yRunLenEncoded, 8, video.width, video.height);
+                    cBDiffEncoded = RunLengthEncode.Decode(cBRunLenEncoded, 8, video.width, video.height);
+                    cRDiffEncoded = RunLengthEncode.Decode(cRRunLenEncoded, 8, video.width, video.height);
+                }
+                else if (subsamplingMode == "4:2:2")
+                {
+                    yDiffEncoded = RunLengthEncode.Decode(yRunLenEncoded, 8, video.width, video.height);
+                    cBDiffEncoded = RunLengthEncode.Decode(cBRunLenEncoded, 8, video.width / 2, video.height);
+                    cRDiffEncoded = RunLengthEncode.Decode(cRRunLenEncoded, 8, video.width / 2, video.height);
+                }
+                else
+                {
+                    yDiffEncoded = RunLengthEncode.Decode(yRunLenEncoded, 8, video.width, video.height);
+                    cBDiffEncoded = RunLengthEncode.Decode(cBRunLenEncoded, 8, video.width / 2, video.height / 2);
+                    cRDiffEncoded = RunLengthEncode.Decode(cRRunLenEncoded, 8, video.width / 2, video.height / 2);
+                }
 
                 //Tester.PrintToFile("yDiffEncodedAfter", yDiffEncoded);
 
@@ -621,9 +628,24 @@ namespace Codec
                 int[,] CbMatrix = dctImage.RevertDctAndQuantization(cBDctQuan);
                 int[,] CrMatrix = dctImage.RevertDctAndQuantization(cRDctQuan);
 
-                YMatrix = dctImage.TrimValueMatrix(YMatrix, video.width, video.height);
-                CbMatrix = dctImage.TrimValueMatrix(CbMatrix, video.width, video.height);
-                CrMatrix = dctImage.TrimValueMatrix(CrMatrix, video.width, video.height);
+                if (subsamplingMode == "4:4:4")
+                {
+                    YMatrix = dctImage.TrimValueMatrix(YMatrix, video.width, video.height);
+                    CbMatrix = dctImage.TrimValueMatrix(CbMatrix, video.width, video.height);
+                    CrMatrix = dctImage.TrimValueMatrix(CrMatrix, video.width, video.height);
+                }
+                else if (subsamplingMode == "4:2:2")
+                {
+                    YMatrix = dctImage.TrimValueMatrix(YMatrix, video.width, video.height);
+                    CbMatrix = dctImage.TrimValueMatrix(CbMatrix, video.width / 2, video.height);
+                    CrMatrix = dctImage.TrimValueMatrix(CrMatrix, video.width / 2, video.height);
+                }
+                else
+                {
+                    YMatrix = dctImage.TrimValueMatrix(YMatrix, video.width, video.height);
+                    CbMatrix = dctImage.TrimValueMatrix(CbMatrix, video.width / 2, video.height / 2);
+                    CrMatrix = dctImage.TrimValueMatrix(CrMatrix, video.width / 2, video.height / 2);
+                }
 
                 // instantiate YCbCr images
                 YCbCrImage tempImage = new YCbCrImage(YMatrix.GetLength(0), YMatrix.GetLength(1), subsamplingMode);
@@ -631,7 +653,22 @@ namespace Codec
                 {
                     for (int k = 0; k < YMatrix.GetLength(1); k++)
                     {
-                        tempImage.pixels[j, k] = new YCbCrPixel(YMatrix[j, k], CbMatrix[j, k], CrMatrix[j, k]);
+                        if (subsamplingMode == "4:4:4")
+                        {
+                            tempImage.pixels[j, k] = new YCbCrPixel(YMatrix[j, k], CbMatrix[j, k], CrMatrix[j, k]);
+                        }
+                        else if (subsamplingMode == "4:2:2")
+                        {
+                            double Cb = CbMatrix[(j / 2), k];
+                            double Cr = CrMatrix[(j / 2), k];
+                            tempImage.pixels[j, k] = new YCbCrPixel(YMatrix[j, k], Cb, Cr);
+                        }
+                        else if(subsamplingMode == "4:2:0")
+                        {
+                            double Cb = CbMatrix[(j / 2), (k / 2)];
+                            double Cr = CrMatrix[(j / 2), (k / 2)];
+                            tempImage.pixels[j, k] = new YCbCrPixel(YMatrix[j, k], Cb, Cr);
+                        }
                     }
                 }
                 tempImages[i] = tempImage;

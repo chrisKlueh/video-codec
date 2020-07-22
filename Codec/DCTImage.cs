@@ -83,36 +83,77 @@ namespace Codec
         //create a matrix containing only Y, Cb or Cr values
         public double[,] FillValueMatrix(YCbCrImage image, String channelString)
         {
-            // TODO check for validity
-            // only save every Nth pixel depending on subsampling mode
-            if(true)
+            double[,] valueMatrix = null;
+
+            // only save every Nth pixel depending on subsampling mode / channel string
+            if (subsamplingMode == "4:4:4" || channelString == "Y")
             {
-                // TODO
-            }
-            double[,] valueMatrix = new double[image.width, image.height];
-            for (int height = 0; height < image.height; height++)
-            {
-                for (int width = 0; width < image.width; width++)
+                valueMatrix = new double[image.width, image.height];
+                for (int height = 0; height < image.height; height++)
                 {
-                    YCbCrPixel pixel = image.GetPixel(width, height);
-
-                    switch (channelString)
+                    for (int width = 0; width < image.width; width++)
                     {
-                        case "Y":
-                            valueMatrix[width, height] = pixel.getY();
-                            break;
-                        case "Cb":
-                            valueMatrix[width, height] = pixel.getCb();
-                            break;
-                        case "Cr":
-                            valueMatrix[width, height] = pixel.getCr();
-                            break;
-                        default:
-                            break;
+                        YCbCrPixel pixel = image.GetPixel(width, height);
+                        switch (channelString)
+                        {
+                            case "Y":
+                                valueMatrix[width, height] = pixel.getY();
+                                break;
+                            case "Cb":
+                                valueMatrix[width, height] = pixel.getCb();
+                                break;
+                            case "Cr":
+                                valueMatrix[width, height] = pixel.getCr();
+                                break;
+                            default:
+                                break;
+                        }
                     }
-
+                }
+            } else if (subsamplingMode == "4:2:2")
+            {
+                valueMatrix = new double[image.width / 2, image.height];
+                for (int height = 0; height < image.height; height++)
+                {
+                    for (int width = 0; width < image.width; width += 2)
+                    {
+                        YCbCrPixel pixel = image.GetPixel(width, height);
+                        switch (channelString)
+                        {
+                            case "Cb":
+                                valueMatrix[width / 2, height] = pixel.getCb();
+                                break;
+                            case "Cr":
+                                valueMatrix[width / 2, height] = pixel.getCr();
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+            } else if (subsamplingMode == "4:2:0")
+            {
+                valueMatrix = new double[image.width / 2, image.height / 2];
+                for (int height = 0; height < image.height; height += 2)
+                {
+                    for (int width = 0; width < image.width; width += 2)
+                    {
+                        YCbCrPixel pixel = image.GetPixel(width, height);
+                        switch (channelString)
+                        {
+                            case "Cb":
+                                valueMatrix[width / 2, height / 2] = pixel.getCb();
+                                break;
+                            case "Cr":
+                                valueMatrix[width / 2, height / 2] = pixel.getCr();
+                                break;
+                            default:
+                                break;
+                        }
+                    }
                 }
             }
+
             return valueMatrix;
         }
 
