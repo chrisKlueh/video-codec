@@ -27,8 +27,9 @@ namespace Codec
                     counts[value] = 0;
                 }
                 counts[value]++;
-                valueCount++;
             }
+
+            valueCount = counts.Count;
 
             foreach (int value in counts.Keys)
             {
@@ -140,7 +141,7 @@ namespace Codec
             return returnValue;
         }
     }
-    [Serializable]
+
     internal class HuffmanNode<T> : IComparable
     {
         internal HuffmanNode(double probability, T value)
@@ -188,7 +189,6 @@ namespace Codec
         }
     }
 
-    [Serializable]
     internal class PriorityQueue<T> where T : IComparable
     {
         protected List<T> LstHeap = new List<T>();
