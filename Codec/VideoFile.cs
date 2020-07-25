@@ -18,11 +18,11 @@ namespace Codec
         public BitArray[] YBitArray;
         public BitArray[] CbBitArray;
         public BitArray[] CrBitArray;
-        public Huffman<int>[] YHuffmans;
-        public Huffman<int>[] CbHuffmans;
-        public Huffman<int>[] CrHuffmans;
+        public Dictionary<int, int>[] YHuffmanCounts;
+        public Dictionary<int, int>[] CbHuffmanCounts;
+        public Dictionary<int, int>[] CrHuffmanCounts;
 
-        public VideoFile(int keyFrameEvery, int quality, int width, int height, string subsamplingMode, BitArray[] YBitArray, BitArray[] CbBitArray, BitArray[] CrBitArray, Huffman<int>[] YHuffmans, Huffman<int>[] CbHuffmans, Huffman<int>[] CrHuffmans)
+        public VideoFile(int keyFrameEvery, int quality, int width, int height, string subsamplingMode, BitArray[] YBitArray, BitArray[] CbBitArray, BitArray[] CrBitArray, Dictionary<int, int>[] YHuffmanCounts, Dictionary<int, int>[] CbHuffmanCounts, Dictionary<int, int>[] CrHuffmanCounts)
         {
             this.keyFrameEvery = keyFrameEvery;
             this.quality = quality;
@@ -32,9 +32,9 @@ namespace Codec
             this.YBitArray = YBitArray;
             this.CbBitArray = CbBitArray;
             this.CrBitArray = CrBitArray;
-            this.YHuffmans = YHuffmans;
-            this.CbHuffmans = CbHuffmans;
-            this.CrHuffmans = CrHuffmans;
+            this.YHuffmanCounts = YHuffmanCounts;
+            this.CbHuffmanCounts = CbHuffmanCounts;
+            this.CrHuffmanCounts = CrHuffmanCounts;
         }
     }
 }

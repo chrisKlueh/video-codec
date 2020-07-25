@@ -1,25 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Codec
 {
     // https://rosettacode.org/wiki/Huffman_coding#C.23
-    [Serializable]
     public class Huffman<T> where T : IComparable
     {
-        private readonly Dictionary<T, HuffmanNode<T>> _leafDictionary = new Dictionary<T, HuffmanNode<T>>();
-        private readonly HuffmanNode<T> _root;
+        private readonly Dictionary<int, HuffmanNode<int>> _leafDictionary = new Dictionary<int, HuffmanNode<int>>();
+        private readonly HuffmanNode<int> _root;
 
-        public Huffman(IEnumerable<T> values)
+        Dictionary<int, int> counts = new Dictionary<int, int>();
+        int valueCount = 0;
+
+        public Huffman(IEnumerable<int> values)
         {
-            var counts = new Dictionary<T, int>();
-            var priorityQueue = new PriorityQueue<HuffmanNode<T>>();
-            int valueCount = 0;
+            var priorityQueue = new PriorityQueue<HuffmanNode<int>>();
 
-            foreach (T value in values)
+            foreach (int value in values)
             {
                 if (!counts.ContainsKey(value))
                 {
@@ -29,18 +30,18 @@ namespace Codec
                 valueCount++;
             }
 
-            foreach (T value in counts.Keys)
+            foreach (int value in counts.Keys)
             {
-                var node = new HuffmanNode<T>((double)counts[value] / valueCount, value);
+                var node = new HuffmanNode<int>((double)counts[value] / valueCount, value);
                 priorityQueue.Add(node);
                 _leafDictionary[value] = node;
             }
 
             while (priorityQueue.Count > 1)
             {
-                HuffmanNode<T> leftSon = priorityQueue.Pop();
-                HuffmanNode<T> rightSon = priorityQueue.Pop();
-                var parent = new HuffmanNode<T>(leftSon, rightSon);
+                HuffmanNode<int> leftSon = priorityQueue.Pop();
+                HuffmanNode<int> rightSon = priorityQueue.Pop();
+                var parent = new HuffmanNode<int>(leftSon, rightSon);
                 priorityQueue.Add(parent);
             }
 
@@ -48,20 +49,49 @@ namespace Codec
             _root.IsZero = false;
         }
 
-        public List<int> Encode(T value)
+        public Huffman(Dictionary<int, int> counts)
+        {
+            var priorityQueue = new PriorityQueue<HuffmanNode<int>>();
+            valueCount = counts.Count;
+
+            foreach (int value in counts.Keys)
+            {
+                var node = new HuffmanNode<int>((double)counts[value] / valueCount, value);
+                priorityQueue.Add(node);
+                _leafDictionary[value] = node;
+            }
+
+            while (priorityQueue.Count > 1)
+            {
+                HuffmanNode<int> leftSon = priorityQueue.Pop();
+                HuffmanNode<int> rightSon = priorityQueue.Pop();
+                var parent = new HuffmanNode<int>(leftSon, rightSon);
+                priorityQueue.Add(parent);
+            }
+
+            _root = priorityQueue.Pop();
+            _root.IsZero = false;
+        }
+
+        public Dictionary<int, int> GetCounts()
+        {
+            return counts;
+        }
+
+        public List<int> Encode(int value)
         {
             var returnValue = new List<int>();
             Encode(value, returnValue);
             return returnValue;
         }
 
-        public void Encode(T value, List<int> encoding)
+        public void Encode(int value, List<int> encoding)
         {
             if (!_leafDictionary.ContainsKey(value))
             {
                 throw new ArgumentException("Invalid value in Encode");
             }
-            HuffmanNode<T> nodeCur = _leafDictionary[value];
+            HuffmanNode<int> nodeCur = _leafDictionary[value];
             var reverseEncoding = new List<int>();
             while (!nodeCur.IsRoot)
             {
@@ -73,20 +103,20 @@ namespace Codec
             encoding.AddRange(reverseEncoding);
         }
 
-        public List<int> Encode(IEnumerable<T> values)
+        public List<int> Encode(IEnumerable<int> values)
         {
             var returnValue = new List<int>();
 
-            foreach (T value in values)
+            foreach (int value in values)
             {
                 Encode(value, returnValue);
             }
             return returnValue;
         }
 
-        public T Decode(List<int> bitString, ref int position)
+        public int Decode(List<int> bitString, ref int position)
         {
-            HuffmanNode<T> nodeCur = _root;
+            HuffmanNode<int> nodeCur = _root;
             while (!nodeCur.IsLeaf)
             {
                 if (position > bitString.Count)
@@ -98,10 +128,10 @@ namespace Codec
             return nodeCur.Value;
         }
 
-        public List<T> Decode(List<int> bitString)
+        public List<int> Decode(List<int> bitString)
         {
             int position = 0;
-            var returnValue = new List<T>();
+            var returnValue = new List<int>();
 
             while (position != bitString.Count)
             {
