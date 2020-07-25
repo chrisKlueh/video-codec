@@ -30,9 +30,9 @@ namespace Codec
         List<int>[] CbBitArray;
         List<int>[] CrBitArray;
 
-        Huffman<int>[] YHuffmans;
-        Huffman<int>[] CbHuffmans;
-        Huffman<int>[] CrHuffmans;
+        Dictionary<int, int>[] YHuffmanCounts;
+        Dictionary<int, int>[] CbHuffmanCounts;
+        Dictionary<int, int>[] CrHuffmanCounts;
 
         string outputFile = null;
         Image[] outputImages;
@@ -114,9 +114,9 @@ namespace Codec
                 {
                     len = (inputImages.Length / keyFrameEvery) + 1;
                 }
-                YHuffmans = new Huffman<int>[len];
-                CbHuffmans = new Huffman<int>[len];
-                CrHuffmans = new Huffman<int>[len];
+                YHuffmanCounts = new Dictionary<int, int>[len];
+                CbHuffmanCounts = new Dictionary<int, int>[len];
+                CrHuffmanCounts = new Dictionary<int, int>[len];
             }
         }
 
@@ -206,7 +206,7 @@ namespace Codec
             Encoding();
 
             // Save our video file
-            VideoFile outputVideo = new VideoFile(keyFrameEvery, quality, width, height, subsamplingMode, toBitArrayArray(YBitArray), toBitArrayArray(CbBitArray), toBitArrayArray(CrBitArray), YHuffmans, CbHuffmans, CrHuffmans);
+            VideoFile outputVideo = new VideoFile(keyFrameEvery, quality, width, height, subsamplingMode, toBitArrayArray(YBitArray), toBitArrayArray(CbBitArray), toBitArrayArray(CrBitArray), YHuffmanCounts, CbHuffmanCounts, CrHuffmanCounts);
 
             IFormatter encodingFormatter = new BinaryFormatter();
             Stream encodingStream = new FileStream("akyio.bfv", FileMode.Create, FileAccess.Write, FileShare.None);
@@ -215,12 +215,12 @@ namespace Codec
 
             //// Garbage collection
             int tempImagesLen = tempImages.Length;
-            int huffmansLen = YHuffmans.Length;
+            int huffmansLen = YHuffmanCounts.Length;
             int bitArrayLen = YBitArray.Length;
             tempImages = new YCbCrImage[tempImagesLen];
-            YHuffmans = new Huffman<int>[huffmansLen];
-            CbHuffmans = new Huffman<int>[huffmansLen];
-            CrHuffmans = new Huffman<int>[huffmansLen];
+            YHuffmanCounts = new Dictionary<int, int>[huffmansLen];
+            CbHuffmanCounts = new Dictionary<int, int>[huffmansLen];
+            CrHuffmanCounts = new Dictionary<int, int>[huffmansLen];
             YBitArray = new List<int>[bitArrayLen];
             CbBitArray = new List<int>[bitArrayLen];
             CrBitArray = new List<int>[bitArrayLen];
@@ -587,9 +587,9 @@ namespace Codec
             for (int i = start; i < finish; i++)
             {
                 // huffman decoding
-                yRunLenEncoded = HuffmanDecoding(YBitArray[i], video.YHuffmans[i / keyFrameEvery]);
-                cBRunLenEncoded = HuffmanDecoding(CbBitArray[i], video.CbHuffmans[i / keyFrameEvery]);
-                cRRunLenEncoded = HuffmanDecoding(CrBitArray[i], video.CrHuffmans[i / keyFrameEvery]);
+                yRunLenEncoded = HuffmanDecoding(YBitArray[i], video.YHuffmanCounts[i / keyFrameEvery]);
+                cBRunLenEncoded = HuffmanDecoding(CbBitArray[i], video.CbHuffmanCounts[i / keyFrameEvery]);
+                cRRunLenEncoded = HuffmanDecoding(CrBitArray[i], video.CrHuffmanCounts[i / keyFrameEvery]);
 
                 //Tester.PrintToFile("yRunLenEncodedAfter", yRunLenEncoded);
 
@@ -731,9 +731,9 @@ namespace Codec
                     CrBitArray[k] = HuffmanEncoding(CrHuffman, CrHuffmanValues[j]);
                 }
 
-                YHuffmans[i / keyFrameEvery] = YHuffman;
-                CbHuffmans[i / keyFrameEvery] = CbHuffman;
-                CrHuffmans[i / keyFrameEvery] = CrHuffman;
+                YHuffmanCounts[i / keyFrameEvery] = YHuffman.GetCounts();
+                CbHuffmanCounts[i / keyFrameEvery] = CbHuffman.GetCounts();
+                CrHuffmanCounts[i / keyFrameEvery] = CrHuffman.GetCounts();
             } else if (i % keyFrameEvery == keyFrameEvery - 1)
             {
                 int[] yTemp = new int[0];
@@ -765,9 +765,9 @@ namespace Codec
                     CrBitArray[k] = HuffmanEncoding(CrHuffman, CrHuffmanValues[j]);
                 }
 
-                YHuffmans[i / keyFrameEvery] = YHuffman;
-                CbHuffmans[i / keyFrameEvery] = CbHuffman;
-                CrHuffmans[i / keyFrameEvery] = CrHuffman;
+                YHuffmanCounts[i / keyFrameEvery] = YHuffman.GetCounts();
+                CbHuffmanCounts[i / keyFrameEvery] = CbHuffman.GetCounts();
+                CrHuffmanCounts[i / keyFrameEvery] = CrHuffman.GetCounts();
             }
         }
 
@@ -776,8 +776,9 @@ namespace Codec
             return huffman.Encode(array);
         }
 
-        private int[] HuffmanDecoding(List<int> list, Huffman<int> huffman)
+        private int[] HuffmanDecoding(List<int> list, Dictionary<int, int> counts)
         {
+            Huffman<int> huffman = new Huffman<int>(counts);
             return huffman.Decode(list).ToArray();
         }
 
