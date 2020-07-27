@@ -478,16 +478,49 @@ namespace Codec
                 start = threadNum * offset;
                 finish = (threadNum + 1) * offset;
             }
-            
+
+
+
+            int[,] yDctQuanDiff = null;
+            int[,] cBDctQuanDiff = null;
+            int[,] cRDctQuanDiff = null;
+            int[,] yDctQuanFromLastFrame = null;
+            int[,] cBDctQuanFromLastFrame = null;
+            int[,] cRDctQuanFromLastFrame = null;
 
             for (int i = start; i < finish; i++)
             {
                 DctImage dctImage = new DctImage(tempImages[i], quality);
+
                 yDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Y");
                 cBDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cb");
                 cRDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cr");
 
-                if(subsamplingMode == "4:4:4")
+                // it's a keyframe
+                if (i % keyFrameEvery != 0)
+                {
+                    for (int j = 0; j < yDctQuanFromLastFrame.GetLength(0); j++)
+                    {
+                        for (int k = 0; k < yDctQuanFromLastFrame.GetLength(1); k++)
+                        {
+                            yDctQuanDiff[j, k] = yDctQuanFromLastFrame[j, k] - yDctQuan[j, k];
+                            cBDctQuanDiff[j, k] = cBDctQuanFromLastFrame[j, k] - cBDctQuan[j, k];
+                            cRDctQuanDiff[j, k] = cRDctQuanFromLastFrame[j, k] - cRDctQuan[j, k];
+                        }
+                    }
+                } else
+                {
+                    // but actually it's a keyframe
+                    yDctQuanDiff = new int[yDctQuan.GetLength(0), yDctQuan.GetLength(1)];
+                    cBDctQuanDiff = new int[cBDctQuan.GetLength(0), cBDctQuan.GetLength(1)];
+                    cRDctQuanDiff = new int[cRDctQuan.GetLength(0), cRDctQuan.GetLength(1)];
+                }
+
+                yDctQuanFromLastFrame = yDctQuan;
+                cBDctQuanFromLastFrame = cBDctQuan;
+                cRDctQuanFromLastFrame = cRDctQuan;
+
+                if (subsamplingMode == "4:4:4")
                 {
                     yDctQuan = dctImage.TrimValueMatrix(yDctQuan, width, height);
                     cBDctQuan = dctImage.TrimValueMatrix(cBDctQuan, width, height);
@@ -504,6 +537,10 @@ namespace Codec
                     cRDctQuan = dctImage.TrimValueMatrix(cRDctQuan, width / 2, height / 2);
                 }
 
+                if (i == 5)
+                {
+                    Tester.PrintToFile("yDctQuanBefore", yDctQuan);
+                }
                 // Tester.PrintToFile("yDctQuanBefore", yDctQuan);
 
                 yDiffEncoded = DifferentialEncoding.Encode(yDctQuan, 8);
@@ -584,6 +621,13 @@ namespace Codec
             int start = threadNum * offset;
             int finish = threadNum != (maxThreads - 1) ? (threadNum + 1) * offset : tempImages.Length;
 
+            int[,] yDctQuanDiff = null;
+            int[,] cBDctQuanDiff = null;
+            int[,] cRDctQuanDiff = null;
+            int[,] yDctQuanFromLastFrame = null;
+            int[,] cBDctQuanFromLastFrame = null;
+            int[,] cRDctQuanFromLastFrame = null;
+
             for (int i = start; i < finish; i++)
             {
                 // huffman decoding
@@ -620,7 +664,31 @@ namespace Codec
                 cBDctQuan = DifferentialEncoding.Decode(cBDiffEncoded, 8);
                 cRDctQuan = DifferentialEncoding.Decode(cRDiffEncoded, 8);
 
-                //Tester.PrintToFile("yDctQuanAfter", yDctQuan);
+                // it's a keyframe
+                if (i % keyFrameEvery != 0)
+                {
+                    yDctQuanDiff = yDctQuan;
+                    cBDctQuanDiff = cBDctQuan;
+                    cRDctQuanDiff = cRDctQuan;
+                    for (int j = 0; j < yDctQuanFromLastFrame.GetLength(0); j++)
+                    {
+                        for (int k = 0; k < yDctQuanFromLastFrame.GetLength(1); k++)
+                        {
+                            yDctQuan[j, k] = yDctQuanFromLastFrame[j, k] + yDctQuanDiff[j, k];
+                            cBDctQuan[j, k] = cBDctQuanFromLastFrame[j, k] + cBDctQuanDiff[j, k];
+                            cRDctQuan[j, k] = cRDctQuanFromLastFrame[j, k] + cRDctQuanDiff[j, k];
+                        }
+                    }
+                }
+
+                yDctQuanFromLastFrame = yDctQuan;
+                cBDctQuanFromLastFrame = cBDctQuan;
+                cRDctQuanFromLastFrame = cRDctQuan;
+
+                if(i == 5)
+                {
+                    Tester.PrintToFile("yDctQuanAfter", yDctQuan);
+                }
 
                 // revert dct and quantization
                 DctImage dctImage = new DctImage(quality, subsamplingMode);
