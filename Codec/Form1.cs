@@ -503,9 +503,9 @@ namespace Codec
                     {
                         for (int k = 0; k < yDctQuanFromLastFrame.GetLength(1); k++)
                         {
-                            yDctQuanDiff[j, k] = yDctQuanFromLastFrame[j, k] - yDctQuan[j, k];
-                            cBDctQuanDiff[j, k] = cBDctQuanFromLastFrame[j, k] - cBDctQuan[j, k];
-                            cRDctQuanDiff[j, k] = cRDctQuanFromLastFrame[j, k] - cRDctQuan[j, k];
+                            yDctQuanDiff[j, k] = yDctQuan[j, k] - yDctQuanFromLastFrame[j, k];
+                            cBDctQuanDiff[j, k] = cBDctQuan[j, k] - cBDctQuanFromLastFrame[j, k];
+                            cRDctQuanDiff[j, k] = cRDctQuan[j, k] - cRDctQuanFromLastFrame[j, k];
                         }
                     }
                 } else
@@ -519,6 +519,14 @@ namespace Codec
                 yDctQuanFromLastFrame = yDctQuan;
                 cBDctQuanFromLastFrame = cBDctQuan;
                 cRDctQuanFromLastFrame = cRDctQuan;
+
+                // it's not a keyframe
+                if (i % keyFrameEvery != 0)
+                {
+                    yDctQuan = yDctQuanDiff;
+                    cBDctQuan = cBDctQuanDiff;
+                    cRDctQuan = cRDctQuanDiff;
+                }
 
                 if (subsamplingMode == "4:4:4")
                 {
@@ -537,10 +545,6 @@ namespace Codec
                     cRDctQuan = dctImage.TrimValueMatrix(cRDctQuan, width / 2, height / 2);
                 }
 
-                if (i == 5)
-                {
-                    Tester.PrintToFile("yDctQuanBefore", yDctQuan);
-                }
                 // Tester.PrintToFile("yDctQuanBefore", yDctQuan);
 
                 yDiffEncoded = DifferentialEncoding.Encode(yDctQuan, 8);
@@ -664,7 +668,7 @@ namespace Codec
                 cBDctQuan = DifferentialEncoding.Decode(cBDiffEncoded, 8);
                 cRDctQuan = DifferentialEncoding.Decode(cRDiffEncoded, 8);
 
-                // it's a keyframe
+                // it's not a keyframe
                 if (i % keyFrameEvery != 0)
                 {
                     yDctQuanDiff = yDctQuan;
@@ -685,10 +689,7 @@ namespace Codec
                 cBDctQuanFromLastFrame = cBDctQuan;
                 cRDctQuanFromLastFrame = cRDctQuan;
 
-                if(i == 5)
-                {
-                    Tester.PrintToFile("yDctQuanAfter", yDctQuan);
-                }
+                // Tester.PrintToFile("yDctQuanAfter", yDctQuan);
 
                 // revert dct and quantization
                 DctImage dctImage = new DctImage(quality, subsamplingMode);
