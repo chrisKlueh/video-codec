@@ -496,7 +496,7 @@ namespace Codec
                 cBDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cb");
                 cRDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cr");
 
-                // it's a keyframe
+                // it's not a keyframe
                 if (i % keyFrameEvery != 0)
                 {
                     for (int j = 0; j < yDctQuanFromLastFrame.GetLength(0); j++)
