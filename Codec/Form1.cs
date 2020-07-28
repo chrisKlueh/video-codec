@@ -416,11 +416,15 @@ namespace Codec
             int threadsXkeyFrames = maxThreads * keyFrameEvery;
             int possibleMultiFors = len / threadsXkeyFrames;
 
-            Parallel.For(0, maxThreads, (i) =>
+            // multi threading makes sense!
+            if(possibleMultiFors > 0)
             {
-                ParallelEncoding(i, possibleMultiFors);
-                GC.Collect();
-            });
+                Parallel.For(0, maxThreads, (i) =>
+                {
+                    ParallelEncoding(i, possibleMultiFors);
+                    GC.Collect();
+                });
+            }
 
             if(len % threadsXkeyFrames != 0)
             {
@@ -479,8 +483,6 @@ namespace Codec
                 finish = (threadNum + 1) * offset;
             }
 
-
-
             int[,] yDctQuanDiff = null;
             int[,] cBDctQuanDiff = null;
             int[,] cRDctQuanDiff = null;
@@ -504,8 +506,21 @@ namespace Codec
                         for (int k = 0; k < yDctQuanFromLastFrame.GetLength(1); k++)
                         {
                             yDctQuanDiff[j, k] = yDctQuan[j, k] - yDctQuanFromLastFrame[j, k];
-                            cBDctQuanDiff[j, k] = cBDctQuan[j, k] - cBDctQuanFromLastFrame[j, k];
-                            cRDctQuanDiff[j, k] = cRDctQuan[j, k] - cRDctQuanFromLastFrame[j, k];
+                            if (subsamplingMode == "4:4:4")
+                            {
+                                cBDctQuanDiff[j, k] = cBDctQuan[j, k] - cBDctQuanFromLastFrame[j, k];
+                                cRDctQuanDiff[j, k] = cRDctQuan[j, k] - cRDctQuanFromLastFrame[j, k];
+                            }
+                            else if (subsamplingMode == "4:2:2")
+                            {
+                                cBDctQuanDiff[j / 2, k] = cBDctQuan[j / 2, k] - cBDctQuanFromLastFrame[j / 2, k];
+                                cRDctQuanDiff[j / 2, k] = cRDctQuan[j / 2, k] - cRDctQuanFromLastFrame[j / 2, k];
+                            }
+                            else if (subsamplingMode == "4:2:0")
+                            {
+                                cBDctQuanDiff[j / 2, k / 2] = cBDctQuan[j / 2, k / 2] - cBDctQuanFromLastFrame[j / 2, k / 2];
+                                cRDctQuanDiff[j / 2, k / 2] = cRDctQuan[j / 2, k / 2] - cRDctQuanFromLastFrame[j / 2, k / 2];
+                            }
                         }
                     }
                 } else
@@ -598,17 +613,45 @@ namespace Codec
             // needed to update UI
             this.Update();
 
+            int len = tempImages.Length;
+            int threadsXkeyFrames = maxThreads * keyFrameEvery;
+            int possibleMultiFors = len / threadsXkeyFrames;
+
             subsamplingMode = video.subsamplingMode;
 
             YBitArray = toIntListArray(video.YBitArray);
             CbBitArray = toIntListArray(video.CbBitArray);
             CrBitArray = toIntListArray(video.CrBitArray);
 
-            Parallel.For(0, maxThreads, (i) =>
+            // multi threading makes sense!
+            if (possibleMultiFors > 0)
             {
-                ParallelDecoding(i, video);
-                GC.Collect();
-            });
+                Parallel.For(0, maxThreads, (i) =>
+                {
+                    ParallelDecoding(i, video, possibleMultiFors);
+                    GC.Collect();
+                });
+            }
+
+            if (len % threadsXkeyFrames != 0)
+            {
+                int end = possibleMultiFors * keyFrameEvery * maxThreads;
+                int leftOvers = len - end;
+                int numOfThreadsForRest = leftOvers / keyFrameEvery;
+                if (numOfThreadsForRest >= 1)
+                {
+                    Parallel.For(0, numOfThreadsForRest, (i) =>
+                    {
+                        ParallelDecoding(i, video, possibleMultiFors, end + (i * keyFrameEvery), end + ((i + 1) * keyFrameEvery));
+                        GC.Collect();
+                    });
+                }
+                leftOvers = leftOvers - (numOfThreadsForRest * keyFrameEvery);
+                if (leftOvers > 0)
+                {
+                    ParallelDecoding(0, video, possibleMultiFors, tempImages.Length - leftOvers);
+                }
+            }
 
             progressLabel.Visible = false;
             progressBar.Visible = false;
@@ -616,14 +659,32 @@ namespace Codec
             this.Update();
         }
 
-        private void ParallelDecoding(int threadNum, VideoFile video)
+        private void ParallelDecoding(int threadNum, VideoFile video, int possibleMultiFors, int? startValue = null, int? endValue = null)
         {
             int[,] yDctQuan, cBDctQuan, cRDctQuan, yDiffEncoded, cBDiffEncoded, cRDiffEncoded;
             int[] yRunLenEncoded, cBRunLenEncoded, cRRunLenEncoded;
 
-            int offset = tempImages.Length / maxThreads;
-            int start = threadNum * offset;
-            int finish = threadNum != (maxThreads - 1) ? (threadNum + 1) * offset : tempImages.Length;
+            int offset = possibleMultiFors * keyFrameEvery;
+            int start;
+            int finish;
+
+            if (startValue != null)
+            {
+                start = (int)startValue;
+                if (endValue != null)
+                {
+                    finish = (int)endValue;
+                }
+                else
+                {
+                    finish = tempImages.Length;
+                }
+            }
+            else
+            {
+                start = threadNum * offset;
+                finish = (threadNum + 1) * offset;
+            }
 
             int[,] yDctQuanDiff = null;
             int[,] cBDctQuanDiff = null;
@@ -679,8 +740,21 @@ namespace Codec
                         for (int k = 0; k < yDctQuanFromLastFrame.GetLength(1); k++)
                         {
                             yDctQuan[j, k] = yDctQuanFromLastFrame[j, k] + yDctQuanDiff[j, k];
-                            cBDctQuan[j, k] = cBDctQuanFromLastFrame[j, k] + cBDctQuanDiff[j, k];
-                            cRDctQuan[j, k] = cRDctQuanFromLastFrame[j, k] + cRDctQuanDiff[j, k];
+                            if (subsamplingMode == "4:4:4")
+                            {
+                                cBDctQuan[j, k] = cBDctQuanFromLastFrame[j, k] + cBDctQuanDiff[j, k];
+                                cRDctQuan[j, k] = cRDctQuanFromLastFrame[j, k] + cRDctQuanDiff[j, k];
+                            }
+                            else if (subsamplingMode == "4:2:2")
+                            {
+                                cBDctQuan[j / 2, k] = cBDctQuanFromLastFrame[j / 2, k] + cBDctQuanDiff[j / 2, k];
+                                cRDctQuan[j / 2, k] = cRDctQuanFromLastFrame[j / 2, k] + cRDctQuanDiff[j / 2, k];
+                            }
+                            else if (subsamplingMode == "4:2:0")
+                            {
+                                cBDctQuan[j / 2, k / 2] = cBDctQuanFromLastFrame[j / 2, k / 2] + cBDctQuanDiff[j / 2, k / 2];
+                                cRDctQuan[j / 2, k / 2] = cRDctQuanFromLastFrame[j / 2, k / 2] + cRDctQuanDiff[j / 2, k / 2];
+                            }
                         }
                     }
                 }
