@@ -105,18 +105,7 @@ namespace Codec
                 CbBitArray = new List<int>[inputImages.Length];
                 CrBitArray = new List<int>[inputImages.Length];
                 // init huffmans
-                int len;
-                if(inputImages.Length % keyFrameEvery == 0)
-                {
-                    len = inputImages.Length / keyFrameEvery;
-                    
-                } else
-                {
-                    len = (inputImages.Length / keyFrameEvery) + 1;
-                }
-                YHuffmanCounts = new Dictionary<int, int>[len];
-                CbHuffmanCounts = new Dictionary<int, int>[len];
-                CrHuffmanCounts = new Dictionary<int, int>[len];
+                UpdateHuffmanCounts();
             }
         }
 
@@ -151,6 +140,7 @@ namespace Codec
                 timeBar.LargeChange = keyFrameEvery;
                 timeBar.SmallChange = keyFrameEvery;
                 timeBar.TickFrequency = keyFrameEvery;
+                UpdateHuffmanCounts();
             } else
             {
                 // TODO: alert error?
@@ -251,6 +241,23 @@ namespace Codec
         }
 
         #region Helper Methods
+
+        private void UpdateHuffmanCounts()
+        {
+            int len;
+            if (inputImages.Length % keyFrameEvery == 0)
+            {
+                len = inputImages.Length / keyFrameEvery;
+
+            }
+            else
+            {
+                len = (inputImages.Length / keyFrameEvery) + 1;
+            }
+            YHuffmanCounts = new Dictionary<int, int>[len];
+            CbHuffmanCounts = new Dictionary<int, int>[len];
+            CrHuffmanCounts = new Dictionary<int, int>[len];
+        }
 
         private BitArray[] toBitArrayArray(List<int>[] listArray)
         {
@@ -421,7 +428,7 @@ namespace Codec
             {
                 Parallel.For(0, maxThreads, (i) =>
                 {
-                    ParallelEncoding(i, possibleMultiFors);
+                    ParallelEncoding(i, possibleMultiFors, maxThreads);
                     GC.Collect();
                 });
             }
@@ -435,13 +442,13 @@ namespace Codec
                 {
                     Parallel.For(0, numOfThreadsForRest, (i) =>
                     {
-                        ParallelEncoding(i, possibleMultiFors, end + (i * keyFrameEvery), end + ((i + 1) * keyFrameEvery));
+                        ParallelEncoding(i, possibleMultiFors, numOfThreadsForRest, end + (i * keyFrameEvery), end + ((i + 1) * keyFrameEvery));
                     });
                 }
                 leftOvers = leftOvers - (numOfThreadsForRest * keyFrameEvery);
                 if (leftOvers > 0)
                 {
-                    ParallelEncoding(0, possibleMultiFors, tempImages.Length - leftOvers);
+                    ParallelEncoding(0, possibleMultiFors, 1, tempImages.Length - leftOvers);
                 }
             }
 
@@ -453,7 +460,7 @@ namespace Codec
             this.Update();
         }
 
-        public void ParallelEncoding(int threadNum, int possibleMultiFors, int? startValue = null, int? endValue = null)
+        public void ParallelEncoding(int threadNum, int possibleMultiFors, int numOfThreads, int? startValue = null, int? endValue = null)
         {
             int[,] yDctQuan, cBDctQuan, cRDctQuan, yDiffEncoded, cBDiffEncoded, cRDiffEncoded;
             int[] yRunLenEncoded, cBRunLenEncoded, cRRunLenEncoded;
@@ -589,7 +596,7 @@ namespace Codec
                 //tempImages[i] = null;
 
                 MethodInvoker mi = new MethodInvoker(() => {
-                    int newValue = progressBar.Value + maxThreads;
+                    int newValue = progressBar.Value + numOfThreads;
                     if(newValue <= inputImages.Length)
                     {
                         progressBar.Value = newValue;
@@ -629,7 +636,7 @@ namespace Codec
             {
                 Parallel.For(0, maxThreads, (i) =>
                 {
-                    ParallelDecoding(i, video, possibleMultiFors);
+                    ParallelDecoding(i, video, possibleMultiFors, maxThreads);
                     GC.Collect();
                 });
             }
@@ -643,14 +650,14 @@ namespace Codec
                 {
                     Parallel.For(0, numOfThreadsForRest, (i) =>
                     {
-                        ParallelDecoding(i, video, possibleMultiFors, end + (i * keyFrameEvery), end + ((i + 1) * keyFrameEvery));
+                        ParallelDecoding(i, video, possibleMultiFors, numOfThreadsForRest, end + (i * keyFrameEvery), end + ((i + 1) * keyFrameEvery));
                         GC.Collect();
                     });
                 }
                 leftOvers = leftOvers - (numOfThreadsForRest * keyFrameEvery);
                 if (leftOvers > 0)
                 {
-                    ParallelDecoding(0, video, possibleMultiFors, tempImages.Length - leftOvers);
+                    ParallelDecoding(0, video, possibleMultiFors, 1, tempImages.Length - leftOvers);
                 }
             }
 
@@ -660,7 +667,7 @@ namespace Codec
             this.Update();
         }
 
-        private void ParallelDecoding(int threadNum, VideoFile video, int possibleMultiFors, int? startValue = null, int? endValue = null)
+        private void ParallelDecoding(int threadNum, VideoFile video, int possibleMultiFors, int numOfThreads, int? startValue = null, int? endValue = null)
         {
             int[,] yDctQuan, cBDctQuan, cRDctQuan, yDiffEncoded, cBDiffEncoded, cRDiffEncoded;
             int[] yRunLenEncoded, cBRunLenEncoded, cRRunLenEncoded;
@@ -824,7 +831,7 @@ namespace Codec
                 tempImages[i] = tempImage;
 
                 MethodInvoker mi = new MethodInvoker(() => {
-                    int newValue = progressBar.Value + maxThreads;
+                    int newValue = progressBar.Value + numOfThreads;
                     if (newValue <= inputImages.Length)
                     {
                         progressBar.Value = newValue;
