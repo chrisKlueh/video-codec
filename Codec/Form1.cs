@@ -511,15 +511,16 @@ namespace Codec
                                 cBDctQuanDiff[j, k] = cBDctQuan[j, k] - cBDctQuanFromLastFrame[j, k];
                                 cRDctQuanDiff[j, k] = cRDctQuan[j, k] - cRDctQuanFromLastFrame[j, k];
                             }
-                            else if (subsamplingMode == "4:2:2")
+                        }
+                    }
+                    if (subsamplingMode != "4:4:4")
+                    {
+                        for (int j = 0; j < cBDctQuanFromLastFrame.GetLength(0); j++)
+                        {
+                            for (int k = 0; k < cBDctQuanFromLastFrame.GetLength(1); k++)
                             {
-                                cBDctQuanDiff[j / 2, k] = cBDctQuan[j / 2, k] - cBDctQuanFromLastFrame[j / 2, k];
-                                cRDctQuanDiff[j / 2, k] = cRDctQuan[j / 2, k] - cRDctQuanFromLastFrame[j / 2, k];
-                            }
-                            else if (subsamplingMode == "4:2:0")
-                            {
-                                cBDctQuanDiff[j / 2, k / 2] = cBDctQuan[j / 2, k / 2] - cBDctQuanFromLastFrame[j / 2, k / 2];
-                                cRDctQuanDiff[j / 2, k / 2] = cRDctQuan[j / 2, k / 2] - cRDctQuanFromLastFrame[j / 2, k / 2];
+                                cBDctQuanDiff[j, k] = cBDctQuan[j, k] - cBDctQuanFromLastFrame[j, k];
+                                cRDctQuanDiff[j, k] = cRDctQuan[j, k] - cRDctQuanFromLastFrame[j, k];
                             }
                         }
                     }
@@ -745,15 +746,16 @@ namespace Codec
                                 cBDctQuan[j, k] = cBDctQuanFromLastFrame[j, k] + cBDctQuanDiff[j, k];
                                 cRDctQuan[j, k] = cRDctQuanFromLastFrame[j, k] + cRDctQuanDiff[j, k];
                             }
-                            else if (subsamplingMode == "4:2:2")
+                        }
+                    }
+                    if (subsamplingMode != "4:4:4")
+                    {
+                        for (int j = 0; j < cBDctQuanFromLastFrame.GetLength(0); j++)
+                        {
+                            for (int k = 0; k < cBDctQuanFromLastFrame.GetLength(1); k++)
                             {
-                                cBDctQuan[j / 2, k] = cBDctQuanFromLastFrame[j / 2, k] + cBDctQuanDiff[j / 2, k];
-                                cRDctQuan[j / 2, k] = cRDctQuanFromLastFrame[j / 2, k] + cRDctQuanDiff[j / 2, k];
-                            }
-                            else if (subsamplingMode == "4:2:0")
-                            {
-                                cBDctQuan[j / 2, k / 2] = cBDctQuanFromLastFrame[j / 2, k / 2] + cBDctQuanDiff[j / 2, k / 2];
-                                cRDctQuan[j / 2, k / 2] = cRDctQuanFromLastFrame[j / 2, k / 2] + cRDctQuanDiff[j / 2, k / 2];
+                                cBDctQuan[j, k] = cBDctQuanFromLastFrame[j, k] + cBDctQuanDiff[j, k];
+                                cRDctQuan[j, k] = cRDctQuanFromLastFrame[j, k] + cRDctQuanDiff[j, k];
                             }
                         }
                     }
@@ -792,28 +794,33 @@ namespace Codec
 
                 // instantiate YCbCr images
                 YCbCrImage tempImage = new YCbCrImage(YMatrix.GetLength(0), YMatrix.GetLength(1), subsamplingMode);
+             
                 for (int j = 0; j < YMatrix.GetLength(0); j++)
-                {
-                    for (int k = 0; k < YMatrix.GetLength(1); k++)
-                    {
-                        if (subsamplingMode == "4:4:4")
+                { 
+                        for (int k = 0; k < YMatrix.GetLength(1); k++)
                         {
-                            tempImage.pixels[j, k] = new YCbCrPixel(YMatrix[j, k], CbMatrix[j, k], CrMatrix[j, k]);
+
+                            if (subsamplingMode == "4:4:4")
+                            {
+                                tempImage.pixels[j, k] = new YCbCrPixel(YMatrix[j, k], CbMatrix[j, k], CrMatrix[j, k]);
+                            }
+                            else if (subsamplingMode == "4:2:2")
+                            {
+                                double Cb = CbMatrix[(j / 2), k];
+                                double Cr = CrMatrix[(j / 2), k];
+                                tempImage.pixels[j, k] = new YCbCrPixel(YMatrix[j, k], Cb, Cr);
+                            }
+                            else if (subsamplingMode == "4:2:0")
+                            {
+                                double Cb = CbMatrix[(j / 2), (k / 2)];
+                                double Cr = CrMatrix[(j / 2), (k / 2)];
+                                tempImage.pixels[j, k] = new YCbCrPixel(YMatrix[j, k], Cb, Cr);
+                            }
+
                         }
-                        else if (subsamplingMode == "4:2:2")
-                        {
-                            double Cb = CbMatrix[(j / 2), k];
-                            double Cr = CrMatrix[(j / 2), k];
-                            tempImage.pixels[j, k] = new YCbCrPixel(YMatrix[j, k], Cb, Cr);
-                        }
-                        else if(subsamplingMode == "4:2:0")
-                        {
-                            double Cb = CbMatrix[(j / 2), (k / 2)];
-                            double Cr = CrMatrix[(j / 2), (k / 2)];
-                            tempImage.pixels[j, k] = new YCbCrPixel(YMatrix[j, k], Cb, Cr);
-                        }
-                    }
-                }
+                    
+                } 
+
                 tempImages[i] = tempImage;
 
                 MethodInvoker mi = new MethodInvoker(() => {
@@ -928,7 +935,7 @@ namespace Codec
         #endregion
 
         // only allow one item to be checked in the chroma box
-        private void chromaBox_SelectedIndexChanged(object sender, EventArgs e)
+        public void chromaBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             int iSelectedIndex = chromaBox.SelectedIndex;
             if (iSelectedIndex == -1)
