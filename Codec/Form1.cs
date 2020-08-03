@@ -105,18 +105,7 @@ namespace Codec
                 CbBitArray = new List<int>[inputImages.Length];
                 CrBitArray = new List<int>[inputImages.Length];
                 // init huffmans
-                int len;
-                if(inputImages.Length % keyFrameEvery == 0)
-                {
-                    len = inputImages.Length / keyFrameEvery;
-                    
-                } else
-                {
-                    len = (inputImages.Length / keyFrameEvery) + 1;
-                }
-                YHuffmanCounts = new Dictionary<int, int>[len];
-                CbHuffmanCounts = new Dictionary<int, int>[len];
-                CrHuffmanCounts = new Dictionary<int, int>[len];
+                UpdateHuffmanCounts();
             }
         }
 
@@ -151,6 +140,7 @@ namespace Codec
                 timeBar.LargeChange = keyFrameEvery;
                 timeBar.SmallChange = keyFrameEvery;
                 timeBar.TickFrequency = keyFrameEvery;
+                UpdateHuffmanCounts();
             } else
             {
                 // TODO: alert error?
@@ -251,6 +241,23 @@ namespace Codec
         }
 
         #region Helper Methods
+
+        private void UpdateHuffmanCounts()
+        {
+            int len;
+            if (inputImages.Length % keyFrameEvery == 0)
+            {
+                len = inputImages.Length / keyFrameEvery;
+
+            }
+            else
+            {
+                len = (inputImages.Length / keyFrameEvery) + 1;
+            }
+            YHuffmanCounts = new Dictionary<int, int>[len];
+            CbHuffmanCounts = new Dictionary<int, int>[len];
+            CrHuffmanCounts = new Dictionary<int, int>[len];
+        }
 
         private BitArray[] toBitArrayArray(List<int>[] listArray)
         {
@@ -416,11 +423,15 @@ namespace Codec
             int threadsXkeyFrames = maxThreads * keyFrameEvery;
             int possibleMultiFors = len / threadsXkeyFrames;
 
-            Parallel.For(0, maxThreads, (i) =>
+            // multi threading makes sense!
+            if(possibleMultiFors > 0)
             {
-                ParallelEncoding(i, possibleMultiFors);
-                GC.Collect();
-            });
+                Parallel.For(0, maxThreads, (i) =>
+                {
+                    ParallelEncoding(i, possibleMultiFors, maxThreads);
+                    GC.Collect();
+                });
+            }
 
             if(len % threadsXkeyFrames != 0)
             {
@@ -431,13 +442,13 @@ namespace Codec
                 {
                     Parallel.For(0, numOfThreadsForRest, (i) =>
                     {
-                        ParallelEncoding(i, possibleMultiFors, end + (i * keyFrameEvery), end + ((i + 1) * keyFrameEvery));
+                        ParallelEncoding(i, possibleMultiFors, numOfThreadsForRest, end + (i * keyFrameEvery), end + ((i + 1) * keyFrameEvery));
                     });
                 }
                 leftOvers = leftOvers - (numOfThreadsForRest * keyFrameEvery);
                 if (leftOvers > 0)
                 {
-                    ParallelEncoding(0, possibleMultiFors, tempImages.Length - leftOvers);
+                    ParallelEncoding(0, possibleMultiFors, 1, tempImages.Length - leftOvers);
                 }
             }
 
@@ -449,7 +460,7 @@ namespace Codec
             this.Update();
         }
 
-        public void ParallelEncoding(int threadNum, int possibleMultiFors, int? startValue = null, int? endValue = null)
+        public void ParallelEncoding(int threadNum, int possibleMultiFors, int numOfThreads, int? startValue = null, int? endValue = null)
         {
             int[,] yDctQuan, cBDctQuan, cRDctQuan, yDiffEncoded, cBDiffEncoded, cRDiffEncoded;
             int[] yRunLenEncoded, cBRunLenEncoded, cRRunLenEncoded;
@@ -478,16 +489,69 @@ namespace Codec
                 start = threadNum * offset;
                 finish = (threadNum + 1) * offset;
             }
-            
+
+            int[,] yDctQuanDiff = null;
+            int[,] cBDctQuanDiff = null;
+            int[,] cRDctQuanDiff = null;
+            int[,] yDctQuanFromLastFrame = null;
+            int[,] cBDctQuanFromLastFrame = null;
+            int[,] cRDctQuanFromLastFrame = null;
 
             for (int i = start; i < finish; i++)
             {
                 DctImage dctImage = new DctImage(tempImages[i], quality);
+
                 yDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Y");
                 cBDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cb");
                 cRDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cr");
 
-                if(subsamplingMode == "4:4:4")
+                // it's not a keyframe
+                if (i % keyFrameEvery != 0)
+                {
+                    for (int j = 0; j < yDctQuanFromLastFrame.GetLength(0); j++)
+                    {
+                        for (int k = 0; k < yDctQuanFromLastFrame.GetLength(1); k++)
+                        {
+                            yDctQuanDiff[j, k] = yDctQuan[j, k] - yDctQuanFromLastFrame[j, k];
+                            if (subsamplingMode == "4:4:4")
+                            {
+                                cBDctQuanDiff[j, k] = cBDctQuan[j, k] - cBDctQuanFromLastFrame[j, k];
+                                cRDctQuanDiff[j, k] = cRDctQuan[j, k] - cRDctQuanFromLastFrame[j, k];
+                            }
+                        }
+                    }
+                    if (subsamplingMode != "4:4:4")
+                    {
+                        for (int j = 0; j < cBDctQuanFromLastFrame.GetLength(0); j++)
+                        {
+                            for (int k = 0; k < cBDctQuanFromLastFrame.GetLength(1); k++)
+                            {
+                                cBDctQuanDiff[j, k] = cBDctQuan[j, k] - cBDctQuanFromLastFrame[j, k];
+                                cRDctQuanDiff[j, k] = cRDctQuan[j, k] - cRDctQuanFromLastFrame[j, k];
+                            }
+                        }
+                    }
+                } else
+                {
+                    // but actually it's a keyframe
+                    yDctQuanDiff = new int[yDctQuan.GetLength(0), yDctQuan.GetLength(1)];
+                    cBDctQuanDiff = new int[cBDctQuan.GetLength(0), cBDctQuan.GetLength(1)];
+                    cRDctQuanDiff = new int[cRDctQuan.GetLength(0), cRDctQuan.GetLength(1)];
+                }
+
+                yDctQuanFromLastFrame = yDctQuan;
+                cBDctQuanFromLastFrame = cBDctQuan;
+                cRDctQuanFromLastFrame = cRDctQuan;
+
+                // it's not a keyframe
+                if (i % keyFrameEvery != 0)
+                {
+                    yDctQuan = yDctQuanDiff;
+                    cBDctQuan = cBDctQuanDiff;
+                    cRDctQuan = cRDctQuanDiff;
+                }
+
+                if (subsamplingMode == "4:4:4")
                 {
                     yDctQuan = dctImage.TrimValueMatrix(yDctQuan, width, height);
                     cBDctQuan = dctImage.TrimValueMatrix(cBDctQuan, width, height);
@@ -532,7 +596,7 @@ namespace Codec
                 //tempImages[i] = null;
 
                 MethodInvoker mi = new MethodInvoker(() => {
-                    int newValue = progressBar.Value + maxThreads;
+                    int newValue = progressBar.Value + numOfThreads;
                     if(newValue <= inputImages.Length)
                     {
                         progressBar.Value = newValue;
@@ -557,17 +621,45 @@ namespace Codec
             // needed to update UI
             this.Update();
 
+            int len = tempImages.Length;
+            int threadsXkeyFrames = maxThreads * keyFrameEvery;
+            int possibleMultiFors = len / threadsXkeyFrames;
+
             subsamplingMode = video.subsamplingMode;
 
             YBitArray = toIntListArray(video.YBitArray);
             CbBitArray = toIntListArray(video.CbBitArray);
             CrBitArray = toIntListArray(video.CrBitArray);
 
-            Parallel.For(0, maxThreads, (i) =>
+            // multi threading makes sense!
+            if (possibleMultiFors > 0)
             {
-                ParallelDecoding(i, video);
-                GC.Collect();
-            });
+                Parallel.For(0, maxThreads, (i) =>
+                {
+                    ParallelDecoding(i, video, possibleMultiFors, maxThreads);
+                    GC.Collect();
+                });
+            }
+
+            if (len % threadsXkeyFrames != 0)
+            {
+                int end = possibleMultiFors * keyFrameEvery * maxThreads;
+                int leftOvers = len - end;
+                int numOfThreadsForRest = leftOvers / keyFrameEvery;
+                if (numOfThreadsForRest >= 1)
+                {
+                    Parallel.For(0, numOfThreadsForRest, (i) =>
+                    {
+                        ParallelDecoding(i, video, possibleMultiFors, numOfThreadsForRest, end + (i * keyFrameEvery), end + ((i + 1) * keyFrameEvery));
+                        GC.Collect();
+                    });
+                }
+                leftOvers = leftOvers - (numOfThreadsForRest * keyFrameEvery);
+                if (leftOvers > 0)
+                {
+                    ParallelDecoding(0, video, possibleMultiFors, 1, tempImages.Length - leftOvers);
+                }
+            }
 
             progressLabel.Visible = false;
             progressBar.Visible = false;
@@ -575,14 +667,39 @@ namespace Codec
             this.Update();
         }
 
-        private void ParallelDecoding(int threadNum, VideoFile video)
+        private void ParallelDecoding(int threadNum, VideoFile video, int possibleMultiFors, int numOfThreads, int? startValue = null, int? endValue = null)
         {
             int[,] yDctQuan, cBDctQuan, cRDctQuan, yDiffEncoded, cBDiffEncoded, cRDiffEncoded;
             int[] yRunLenEncoded, cBRunLenEncoded, cRRunLenEncoded;
 
-            int offset = tempImages.Length / maxThreads;
-            int start = threadNum * offset;
-            int finish = threadNum != (maxThreads - 1) ? (threadNum + 1) * offset : tempImages.Length;
+            int offset = possibleMultiFors * keyFrameEvery;
+            int start;
+            int finish;
+
+            if (startValue != null)
+            {
+                start = (int)startValue;
+                if (endValue != null)
+                {
+                    finish = (int)endValue;
+                }
+                else
+                {
+                    finish = tempImages.Length;
+                }
+            }
+            else
+            {
+                start = threadNum * offset;
+                finish = (threadNum + 1) * offset;
+            }
+
+            int[,] yDctQuanDiff = null;
+            int[,] cBDctQuanDiff = null;
+            int[,] cRDctQuanDiff = null;
+            int[,] yDctQuanFromLastFrame = null;
+            int[,] cBDctQuanFromLastFrame = null;
+            int[,] cRDctQuanFromLastFrame = null;
 
             for (int i = start; i < finish; i++)
             {
@@ -620,7 +737,42 @@ namespace Codec
                 cBDctQuan = DifferentialEncoding.Decode(cBDiffEncoded, 8);
                 cRDctQuan = DifferentialEncoding.Decode(cRDiffEncoded, 8);
 
-                //Tester.PrintToFile("yDctQuanAfter", yDctQuan);
+                // it's not a keyframe
+                if (i % keyFrameEvery != 0)
+                {
+                    yDctQuanDiff = yDctQuan;
+                    cBDctQuanDiff = cBDctQuan;
+                    cRDctQuanDiff = cRDctQuan;
+                    for (int j = 0; j < yDctQuanFromLastFrame.GetLength(0); j++)
+                    {
+                        for (int k = 0; k < yDctQuanFromLastFrame.GetLength(1); k++)
+                        {
+                            yDctQuan[j, k] = yDctQuanFromLastFrame[j, k] + yDctQuanDiff[j, k];
+                            if (subsamplingMode == "4:4:4")
+                            {
+                                cBDctQuan[j, k] = cBDctQuanFromLastFrame[j, k] + cBDctQuanDiff[j, k];
+                                cRDctQuan[j, k] = cRDctQuanFromLastFrame[j, k] + cRDctQuanDiff[j, k];
+                            }
+                        }
+                    }
+                    if (subsamplingMode != "4:4:4")
+                    {
+                        for (int j = 0; j < cBDctQuanFromLastFrame.GetLength(0); j++)
+                        {
+                            for (int k = 0; k < cBDctQuanFromLastFrame.GetLength(1); k++)
+                            {
+                                cBDctQuan[j, k] = cBDctQuanFromLastFrame[j, k] + cBDctQuanDiff[j, k];
+                                cRDctQuan[j, k] = cRDctQuanFromLastFrame[j, k] + cRDctQuanDiff[j, k];
+                            }
+                        }
+                    }
+                }
+
+                yDctQuanFromLastFrame = yDctQuan;
+                cBDctQuanFromLastFrame = cBDctQuan;
+                cRDctQuanFromLastFrame = cRDctQuan;
+
+                // Tester.PrintToFile("yDctQuanAfter", yDctQuan);
 
                 // revert dct and quantization
                 DctImage dctImage = new DctImage(quality, subsamplingMode);
@@ -649,32 +801,37 @@ namespace Codec
 
                 // instantiate YCbCr images
                 YCbCrImage tempImage = new YCbCrImage(YMatrix.GetLength(0), YMatrix.GetLength(1), subsamplingMode);
+             
                 for (int j = 0; j < YMatrix.GetLength(0); j++)
-                {
-                    for (int k = 0; k < YMatrix.GetLength(1); k++)
-                    {
-                        if (subsamplingMode == "4:4:4")
+                { 
+                        for (int k = 0; k < YMatrix.GetLength(1); k++)
                         {
-                            tempImage.pixels[j, k] = new YCbCrPixel(YMatrix[j, k], CbMatrix[j, k], CrMatrix[j, k]);
+
+                            if (subsamplingMode == "4:4:4")
+                            {
+                                tempImage.pixels[j, k] = new YCbCrPixel(YMatrix[j, k], CbMatrix[j, k], CrMatrix[j, k]);
+                            }
+                            else if (subsamplingMode == "4:2:2")
+                            {
+                                double Cb = CbMatrix[(j / 2), k];
+                                double Cr = CrMatrix[(j / 2), k];
+                                tempImage.pixels[j, k] = new YCbCrPixel(YMatrix[j, k], Cb, Cr);
+                            }
+                            else if (subsamplingMode == "4:2:0")
+                            {
+                                double Cb = CbMatrix[(j / 2), (k / 2)];
+                                double Cr = CrMatrix[(j / 2), (k / 2)];
+                                tempImage.pixels[j, k] = new YCbCrPixel(YMatrix[j, k], Cb, Cr);
+                            }
+
                         }
-                        else if (subsamplingMode == "4:2:2")
-                        {
-                            double Cb = CbMatrix[(j / 2), k];
-                            double Cr = CrMatrix[(j / 2), k];
-                            tempImage.pixels[j, k] = new YCbCrPixel(YMatrix[j, k], Cb, Cr);
-                        }
-                        else if(subsamplingMode == "4:2:0")
-                        {
-                            double Cb = CbMatrix[(j / 2), (k / 2)];
-                            double Cr = CrMatrix[(j / 2), (k / 2)];
-                            tempImage.pixels[j, k] = new YCbCrPixel(YMatrix[j, k], Cb, Cr);
-                        }
-                    }
-                }
+                    
+                } 
+
                 tempImages[i] = tempImage;
 
                 MethodInvoker mi = new MethodInvoker(() => {
-                    int newValue = progressBar.Value + maxThreads;
+                    int newValue = progressBar.Value + numOfThreads;
                     if (newValue <= inputImages.Length)
                     {
                         progressBar.Value = newValue;
@@ -785,7 +942,7 @@ namespace Codec
         #endregion
 
         // only allow one item to be checked in the chroma box
-        private void chromaBox_SelectedIndexChanged(object sender, EventArgs e)
+        public void chromaBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             int iSelectedIndex = chromaBox.SelectedIndex;
             if (iSelectedIndex == -1)
