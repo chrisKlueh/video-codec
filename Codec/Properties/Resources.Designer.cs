@@ -63,6 +63,16 @@ namespace Codec.Properties {
         /// <summary>
         ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap encodedDefault {
+            get {
+                object obj = ResourceManager.GetObject("encodedDefault", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap inputDefault {
             get {
                 object obj = ResourceManager.GetObject("inputDefault", resourceCulture);
