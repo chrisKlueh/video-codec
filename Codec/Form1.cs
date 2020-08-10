@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Codec.Properties;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -59,53 +60,88 @@ namespace Codec
                     inputFileName = ofd.FileName;
                     inputSizeLabel.Text = "Input file size: " + BytesToString(new FileInfo(ofd.FileName).Length);
                 }
-                // Show conversion progress
-                progressLabel.Text = "Importing file...";
-                progressLabel.Visible = true;
-                progressBar.Value = 0;
-                progressBar.Visible = true;
-                // Convert input video to image array
-                var ffMpeg = new NReco.VideoConverter.FFMpegConverter();
 
-                ArrayList inputImagesAL = new ArrayList();
-                var hasFrame = true;
-                var count = 0;
-
-                if(frameLimiter.Checked)
+                if(inputFileName.Substring(inputFileName.Length - 3) == "bfv")
                 {
-                    progressBar.Maximum = Decimal.ToInt32(frameInput.Value);
-                }
+                    // file is already encoded
+                    DisableEncodingUI();
 
-                while (hasFrame == true && (!frameLimiter.Checked || count < Decimal.ToInt32(frameInput.Value)))
+                    // read video file
+                    IFormatter decodingFormatter = new BinaryFormatter();
+                    Stream decodingStream = new FileStream(inputFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+                    VideoFile inputVideo = (VideoFile)decodingFormatter.Deserialize(decodingStream);
+                    outputSizeLabel.Text = "Output file size: " + BytesToString(decodingStream.Length);
+                    decodingStream.Close();
+                    GC.Collect();
+
+                    //init
+                    tempImages = new YCbCrImage[inputVideo.YBitArray.Length];
+                    inputImages = new Image[tempImages.Length];
+                    outputImages = new Image[tempImages.Length];
+                    progressBar.Maximum = tempImages.Length;
+
+                    //DCT & Quantization & Differential Decoding & Run Lenght Decoding & Huffman Decoding
+                    Decoding(inputVideo);
+
+                    // Convert YCbCr images to RGB images
+                    YCbCrToRGB();
+
+                    GC.Collect();
+
+                    // show first picture
+                    outputPictureBox.Image = outputImages[timeBar.Value];
+                    
+                } else
                 {
-                    using (MemoryStream stream = new MemoryStream())
+                    // normal file
+
+                    progressLabel.Text = "Importing file...";
+                    progressLabel.Visible = true;
+                    progressBar.Value = 0;
+                    progressBar.Visible = true;
+                    // Convert input video to image array
+                    var ffMpeg = new NReco.VideoConverter.FFMpegConverter();
+
+                    ArrayList inputImagesAL = new ArrayList();
+                    var hasFrame = true;
+                    var count = 0;
+
+                    if (frameLimiter.Checked)
                     {
-                        // video has 30 fps
-                        ffMpeg.GetVideoThumbnail(inputFileName, stream, (count / 30f));
-                        if (stream.Length != 0)
+                        progressBar.Maximum = Decimal.ToInt32(frameInput.Value);
+                    }
+
+                    while (hasFrame == true && (!frameLimiter.Checked || count < Decimal.ToInt32(frameInput.Value)))
+                    {
+                        using (MemoryStream stream = new MemoryStream())
                         {
-                            inputImagesAL.Add(Image.FromStream(stream));
-                            progressBar.Value = count;
-                            count++;
-                        }
-                        else
-                        {
-                            hasFrame = false;
+                            // video has 30 fps
+                            ffMpeg.GetVideoThumbnail(inputFileName, stream, (count / 30f));
+                            if (stream.Length != 0)
+                            {
+                                inputImagesAL.Add(Image.FromStream(stream));
+                                progressBar.Value = count;
+                                count++;
+                            }
+                            else
+                            {
+                                hasFrame = false;
+                            }
                         }
                     }
-                }
-                inputImages = Array.ConvertAll(inputImagesAL.ToArray(), image => (Image)image);
-                inputPictureBox.Image = inputImages[timeBar.Value];
-                progressBar.Maximum = count + 1;
-                progressLabel.Visible = false;
-                progressBar.Visible = false;
+                    inputImages = Array.ConvertAll(inputImagesAL.ToArray(), image => (Image)image);
+                    inputPictureBox.Image = inputImages[timeBar.Value];
+                    progressBar.Maximum = count + 1;
+                    progressLabel.Visible = false;
+                    progressBar.Visible = false;
 
-                // init result array lengths
-                YBitArray = new List<int>[inputImages.Length];
-                CbBitArray = new List<int>[inputImages.Length];
-                CrBitArray = new List<int>[inputImages.Length];
-                // init huffmans
-                UpdateHuffmanCounts();
+                    // init result array lengths
+                    YBitArray = new List<int>[inputImages.Length];
+                    CbBitArray = new List<int>[inputImages.Length];
+                    CrBitArray = new List<int>[inputImages.Length];
+                    // init huffmans
+                    UpdateHuffmanCounts();
+                }
             }
         }
 
@@ -242,6 +278,34 @@ namespace Codec
 
         #region Helper Methods
 
+        private void DisableEncodingUI()
+        {
+            frameLimiter.Visible = false;
+            frameInput.Visible = false;
+
+            keyFrameLabel1.Visible = false;
+            keyFrameLabel2.Visible = false;
+            keyFrameInput.Visible = false;
+            keyFrameSaveButton.Visible = false;
+
+            ColorSubSamplingLabel.Visible = false;
+            chromaBox.Visible = false;
+
+            qualityLabel.Visible = false;
+            qualityInput.Visible = false;
+            qualitySaveButton.Visible = false;
+
+            convertButton.Visible = false;
+
+            bfvLabel.Visible = true;
+
+            inputPictureBox.Image = Resources.encodedDefault;
+
+            inputCheckBox.Checked = false;
+            inputCheckBox.Enabled = false;
+            outputCheckBox.Checked = true;
+        }
+
         private void UpdateHuffmanCounts()
         {
             int len;
@@ -318,6 +382,7 @@ namespace Codec
             this.Update();
 
             tempImages = new YCbCrImage[inputImages.Length];
+            outputImages = new Image[tempImages.Length];
             for (int i = 0; i < inputImages.Length; i++)
             {
                 Bitmap bitmap = new Bitmap(inputImages[i]);
@@ -359,7 +424,6 @@ namespace Codec
             // needed to update UI
             this.Update();
 
-            outputImages = new Image[tempImages.Length];
             for (int i = 0; i < tempImages.Length; i++)
             {
                 Bitmap bitmap = new Bitmap(tempImages[i].width, tempImages[i].height);
@@ -775,7 +839,7 @@ namespace Codec
                 // Tester.PrintToFile("yDctQuanAfter", yDctQuan);
 
                 // revert dct and quantization
-                DctImage dctImage = new DctImage(quality, subsamplingMode);
+                DctImage dctImage = new DctImage(video.quality, video.subsamplingMode);
                 int[,] YMatrix = dctImage.RevertDctAndQuantization(yDctQuan);
                 int[,] CbMatrix = dctImage.RevertDctAndQuantization(cBDctQuan);
                 int[,] CrMatrix = dctImage.RevertDctAndQuantization(cRDctQuan);
@@ -832,13 +896,13 @@ namespace Codec
 
                 MethodInvoker mi = new MethodInvoker(() => {
                     int newValue = progressBar.Value + numOfThreads;
-                    if (newValue <= inputImages.Length)
+                    if (newValue <= outputImages.Length)
                     {
                         progressBar.Value = newValue;
                     }
                     else
                     {
-                        progressBar.Value = inputImages.Length;
+                        progressBar.Value = outputImages.Length;
                     }
                 });
                 if (!progressBar.InvokeRequired)

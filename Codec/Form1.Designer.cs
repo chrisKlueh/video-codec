@@ -53,6 +53,7 @@
             this.frameInput = new System.Windows.Forms.NumericUpDown();
             this.frameLimiter = new System.Windows.Forms.CheckBox();
             this.chromaBox = new System.Windows.Forms.CheckedListBox();
+            this.bfvLabel = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.timeBar)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.outputPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.inputPictureBox)).BeginInit();
@@ -351,11 +352,22 @@
             this.chromaBox.TabIndex = 27;
             this.chromaBox.SelectedIndexChanged += new System.EventHandler(this.chromaBox_SelectedIndexChanged);
             // 
+            // bfvLabel
+            // 
+            this.bfvLabel.AutoSize = true;
+            this.bfvLabel.Location = new System.Drawing.Point(267, 510);
+            this.bfvLabel.Name = "bfvLabel";
+            this.bfvLabel.Size = new System.Drawing.Size(126, 13);
+            this.bfvLabel.TabIndex = 28;
+            this.bfvLabel.Text = "Video is already encoded";
+            this.bfvLabel.Visible = false;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(670, 591);
+            this.Controls.Add(this.bfvLabel);
             this.Controls.Add(this.chromaBox);
             this.Controls.Add(this.frameLimiter);
             this.Controls.Add(this.frameInput);
@@ -421,6 +433,7 @@
         private System.Windows.Forms.NumericUpDown frameInput;
         private System.Windows.Forms.CheckBox frameLimiter;
         private System.Windows.Forms.CheckedListBox chromaBox;
+        private System.Windows.Forms.Label bfvLabel;
     }
 }
 
