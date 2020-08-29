@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Codec
 {
     class DctImage
     {
         private YCbCrImage image;
+       
+        private List<int[,]> actualDiffList = new List<int[,]>();
 
         public string subsamplingMode = "4:4:4";
         
@@ -48,8 +51,9 @@ namespace Codec
             CalculateQuantizationMatrix(this.qualityFactor);
         }
 
-        public DctImage(YCbCrImage image, int qualityFactor)
+        public DctImage(YCbCrImage image, int qualityFactor, List<int[,]> actualDiffList)
         {
+            this.actualDiffList = actualDiffList;
             this.image = image;
             subsamplingMode = image.subsamplingMode;
             //set qualityFactor to 50 (=base quantization matrix) if given qualityFactor is not in defined range
@@ -227,6 +231,7 @@ namespace Codec
         private int[,] DctSubArray(double[,] valueMatrix)
         {
             int[,] resultMatrix = new int[valueMatrix.GetLength(0), valueMatrix.GetLength(1)];
+            int[,] comparisonMatrix = new int[valueMatrix.GetLength(0), valueMatrix.GetLength(1)];
             //iterate the valueMatrix in 8x8 blocks
             for (int width = 0; width <= valueMatrix.GetLength(1) - 8; width += 8)
             {
@@ -244,17 +249,28 @@ namespace Codec
                     }
                     //perform Dct on subArray
                     subArray = Dct(subArray);
+                    //perform Quantization on subArray
                     subArray = Quantization(subArray);
                     //fill corresponding block of resultMatrix with the values of subArray
                     for (int subArrayY = 0; subArrayY < 8; subArrayY++)
                     {
                         for (int subArrayX = 0; subArrayX < 8; subArrayX++)
                         {
-                            resultMatrix[height + subArrayY, width + subArrayX] = (int)subArray[subArrayY, subArrayX];
+                            
+                            //check if we can cut minor changes
+                            if((int)subArray[subArrayY, subArrayX] < 3) {
+                                resultMatrix[height + subArrayY, width + subArrayX] = 0;
+                                //actualDiff += (int)subArray[subArrayY, subArrayX];
+                            } else {
+                                resultMatrix[height + subArrayY, width + subArrayX] = (int)subArray[subArrayY, subArrayX];
+                            }
+                            comparisonMatrix[height + subArrayY, width + subArrayX] = (int)subArray[subArrayY, subArrayX];
                         }
                     }
                 }
             }
+            
+            actualDiffList.Add(comparisonMatrix);
             //return the fully transformed and quantized resultMatrix
             return resultMatrix;
         }

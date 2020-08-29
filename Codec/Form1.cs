@@ -31,6 +31,13 @@ namespace Codec
         List<int>[] CbBitArray;
         List<int>[] CrBitArray;
 
+
+        List<int[,]> actualDiffList = new List<int[,]>();
+        //int yAccDiff = 0;
+        //int cBAccDiff = 0;
+        //int cRAccDiff = 0;
+
+
         Dictionary<int, int>[] YHuffmanCounts;
         Dictionary<int, int>[] CbHuffmanCounts;
         Dictionary<int, int>[] CrHuffmanCounts;
@@ -563,7 +570,10 @@ namespace Codec
 
             for (int i = start; i < finish; i++)
             {
-                DctImage dctImage = new DctImage(tempImages[i], quality);
+                if (i % keyFrameEvery == 0){
+                    actualDiffList.Clear();
+                } 
+                DctImage dctImage = new DctImage(tempImages[i], quality, actualDiffList);
 
                 yDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Y");
                 cBDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cb");
@@ -576,10 +586,14 @@ namespace Codec
                     {
                         for (int k = 0; k < yDctQuanFromLastFrame.GetLength(1); k++)
                         {
+
+                            //yDctQuanDiff[j, k] = GetOptimizedDifference(yDctQuan[j, k] - yDctQuanFromLastFrame[j, k], "y");
                             yDctQuanDiff[j, k] = yDctQuan[j, k] - yDctQuanFromLastFrame[j, k];
                             if (subsamplingMode == "4:4:4")
                             {
+                                //cBDctQuanDiff[j, k] = GetOptimizedDifference(cBDctQuan[j, k] - cBDctQuanFromLastFrame[j, k], "cB");
                                 cBDctQuanDiff[j, k] = cBDctQuan[j, k] - cBDctQuanFromLastFrame[j, k];
+                                //cRDctQuanDiff[j, k] = GetOptimizedDifference(cRDctQuan[j, k] - cRDctQuanFromLastFrame[j, k], "cR");
                                 cRDctQuanDiff[j, k] = cRDctQuan[j, k] - cRDctQuanFromLastFrame[j, k];
                             }
                         }
@@ -590,7 +604,11 @@ namespace Codec
                         {
                             for (int k = 0; k < cBDctQuanFromLastFrame.GetLength(1); k++)
                             {
+
+                                //cBDctQuanDiff[j, k] = GetOptimizedDifference(cBDctQuan[j, k] - cBDctQuanFromLastFrame[j, k], "cB");
                                 cBDctQuanDiff[j, k] = cBDctQuan[j, k] - cBDctQuanFromLastFrame[j, k];
+                                //cRDctQuanDiff[j, k] = GetOptimizedDifference(cRDctQuan[j, k] - cRDctQuanFromLastFrame[j, k], "cR");
+
                                 cRDctQuanDiff[j, k] = cRDctQuan[j, k] - cRDctQuanFromLastFrame[j, k];
                             }
                         }
