@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
@@ -32,7 +33,7 @@ namespace Codec
         List<int>[] CrBitArray;
 
 
-        List<int[,]> actualDiffList = new List<int[,]>();
+        
         //int yAccDiff = 0;
         //int cBAccDiff = 0;
         //int cRAccDiff = 0;
@@ -535,6 +536,11 @@ namespace Codec
         {
             int[,] yDctQuan, cBDctQuan, cRDctQuan, yDiffEncoded, cBDiffEncoded, cRDiffEncoded;
             int[] yRunLenEncoded, cBRunLenEncoded, cRRunLenEncoded;
+            int[,] accumulatedChanges = null;
+            int count = 0;
+            List<int[,]> actualDiffListY = new List<int[,]>();
+            List<int[,]> actualDiffListCb = new List<int[,]>();
+            List<int[,]> actualDiffListCr = new List<int[,]>();
 
             // needed for multi huffman encoding
             int[][] YHuffmanValues = new int[keyFrameEvery][];
@@ -570,18 +576,19 @@ namespace Codec
 
             for (int i = start; i < finish; i++)
             {
-                if (i % keyFrameEvery == 0){
-                    actualDiffList.Clear();
-                } 
-                DctImage dctImage = new DctImage(tempImages[i], quality, actualDiffList);
+                DctImage dctImage = new DctImage(tempImages[i], quality, actualDiffListY, actualDiffListCb, actualDiffListCr);
 
                 yDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Y");
                 cBDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cb");
                 cRDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cr");
-
+                
+                
                 // it's not a keyframe
                 if (i % keyFrameEvery != 0)
                 {
+                    getOptimizedResult(yDctQuan, actualDiffListY[count - 1], accumulatedChanges);
+                    getOptimizedResult(cBDctQuan, actualDiffListCb[count - 1], accumulatedChanges);
+                    getOptimizedResult(cRDctQuan, actualDiffListCr[count - 1], accumulatedChanges);
                     for (int j = 0; j < yDctQuanFromLastFrame.GetLength(0); j++)
                     {
                         for (int k = 0; k < yDctQuanFromLastFrame.GetLength(1); k++)
@@ -619,7 +626,14 @@ namespace Codec
                     yDctQuanDiff = new int[yDctQuan.GetLength(0), yDctQuan.GetLength(1)];
                     cBDctQuanDiff = new int[cBDctQuan.GetLength(0), cBDctQuan.GetLength(1)];
                     cRDctQuanDiff = new int[cRDctQuan.GetLength(0), cRDctQuan.GetLength(1)];
+
+                    accumulatedChanges = new int[yDctQuan.GetLength(0), yDctQuan.GetLength(1)];
+                    actualDiffListY.Clear();
+                    actualDiffListCb.Clear();
+                    actualDiffListCr.Clear();
+                    count = 0;
                 }
+                count++;
 
                 yDctQuanFromLastFrame = yDctQuan;
                 cBDctQuanFromLastFrame = cBDctQuan;
@@ -1046,6 +1060,24 @@ namespace Codec
             {
                 subsamplingMode = "4:2:0";
             }
+        }
+
+        private void getOptimizedResult(int[,] currentFrame, int[,] previousFrame, int[,] accumulatedChanges) {
+            int maxDifferenceThisFrame = 1;
+            int maxDifferenceKeyFrame = 5;
+            
+            for(int i = 0; i < currentFrame.GetLength(0); i+=8) {
+                for(int j = 0; j < currentFrame.GetLength(1); j+=8) {
+                    int currentDiff = currentFrame[i,j] - previousFrame[i,j];
+                    accumulatedChanges[i,j] = (accumulatedChanges[i,j] == null) ? currentDiff : accumulatedChanges[i,j] + currentDiff;
+                    if(Math.Abs(currentDiff) < maxDifferenceThisFrame && Math.Abs(accumulatedChanges[i,j] + currentDiff) < maxDifferenceKeyFrame) {
+                        currentDiff = 0;
+                    }
+                    currentFrame[i,j] = previousFrame[i,j] + currentDiff;
+                    accumulatedChanges[i,j] = 0;
+                }
+            }
+
         }
     }
 }

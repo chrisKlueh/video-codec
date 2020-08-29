@@ -7,7 +7,9 @@ namespace Codec
     {
         private YCbCrImage image;
        
-        private List<int[,]> actualDiffList = new List<int[,]>();
+        private List<int[,]> actualDiffListY;
+        private List<int[,]> actualDiffListCb;
+        private List<int[,]> actualDiffListCr;
 
         public string subsamplingMode = "4:4:4";
         
@@ -51,9 +53,11 @@ namespace Codec
             CalculateQuantizationMatrix(this.qualityFactor);
         }
 
-        public DctImage(YCbCrImage image, int qualityFactor, List<int[,]> actualDiffList)
+        public DctImage(YCbCrImage image, int qualityFactor, List<int[,]> actualDiffListY, List<int[,]> actualDiffListCb, List<int[,]> actualDiffListCr )
         {
-            this.actualDiffList = actualDiffList;
+            this.actualDiffListY = actualDiffListY;
+            this.actualDiffListCb = actualDiffListCb;
+            this.actualDiffListCr = actualDiffListCr;
             this.image = image;
             subsamplingMode = image.subsamplingMode;
             //set qualityFactor to 50 (=base quantization matrix) if given qualityFactor is not in defined range
@@ -228,7 +232,7 @@ namespace Codec
             return trimmedValueMatrix;
         }
 
-        private int[,] DctSubArray(double[,] valueMatrix)
+        private int[,] DctSubArray(double[,] valueMatrix, string channelString)
         {
             int[,] resultMatrix = new int[valueMatrix.GetLength(0), valueMatrix.GetLength(1)];
             int[,] comparisonMatrix = new int[valueMatrix.GetLength(0), valueMatrix.GetLength(1)];
@@ -258,19 +262,25 @@ namespace Codec
                         {
                             
                             //check if we can cut minor changes
-                            if((int)subArray[subArrayY, subArrayX] < 3) {
-                                resultMatrix[height + subArrayY, width + subArrayX] = 0;
-                                //actualDiff += (int)subArray[subArrayY, subArrayX];
-                            } else {
-                                resultMatrix[height + subArrayY, width + subArrayX] = (int)subArray[subArrayY, subArrayX];
-                            }
+                            resultMatrix[height + subArrayY, width + subArrayX] = (int)subArray[subArrayY, subArrayX];
                             comparisonMatrix[height + subArrayY, width + subArrayX] = (int)subArray[subArrayY, subArrayX];
                         }
                     }
                 }
             }
+
+            switch(channelString) {
+                case "Y":
+                    this.actualDiffListY.Add(comparisonMatrix);
+                    break;
+                case "Cb":
+                    this.actualDiffListCb.Add(comparisonMatrix);
+                    break;
+                case "Cr":
+                    this.actualDiffListCr.Add(comparisonMatrix);
+                    break;
+            }
             
-            actualDiffList.Add(comparisonMatrix);
             //return the fully transformed and quantized resultMatrix
             return resultMatrix;
         }
@@ -371,11 +381,11 @@ namespace Codec
             switch (channelString)
             {
                 case "Y":
-                    return DctSubArray(valueMatrixY);
+                    return DctSubArray(valueMatrixY, "Y");
                 case "Cb":
-                    return DctSubArray(valueMatrixCb);
+                    return DctSubArray(valueMatrixCb, "Cb");
                 case "Cr":
-                    return DctSubArray(valueMatrixCr);
+                    return DctSubArray(valueMatrixCr, "Cr");
                 default:
                     return null;
             }
