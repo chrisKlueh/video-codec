@@ -239,6 +239,19 @@ namespace Codec
         {
             int[,] resultMatrix = new int[valueMatrix.GetLength(0), valueMatrix.GetLength(1)];
             int[,] comparisonMatrix = new int[valueMatrix.GetLength(0), valueMatrix.GetLength(1)];
+            List<int[,]> actualDiffList = new List<int[,]>();
+            switch (channelString)
+            {
+                case "Y":
+                    actualDiffList = actualDiffListY;
+                    break;
+                case "Cb":
+                    actualDiffList = actualDiffListCb;
+                    break;
+                case "Cr":
+                    actualDiffList = actualDiffListCr;
+                    break;
+            }
             //iterate the valueMatrix in 8x8 blocks
             for (int width = 0; width <= valueMatrix.GetLength(1) - 8; width += 8)
             {
@@ -251,7 +264,15 @@ namespace Codec
                     {
                         for (int subArrayX = 0; subArrayX < 8; subArrayX++)
                         {
-                            subArray[subArrayY, subArrayX] = valueMatrix[height + subArrayY, width + subArrayX];
+                            if (actualDiffList.Count > 0)
+                            {
+                                subArray[subArrayY, subArrayX] = getOptimizedResult((int)valueMatrix[height + subArrayY, width + subArrayX], actualDiffList[actualDiffList.Count - 1][subArrayY, subArrayX], ref accumulatedChanges[subArrayY, subArrayX]);
+                            }
+                            else
+                            {
+                                subArray[subArrayY, subArrayX] = valueMatrix[height + subArrayY, width + subArrayX];
+                            }
+                            comparisonMatrix[height + subArrayY, width + subArrayX] = (int)valueMatrix[height + subArrayY, width + subArrayX];
                         }
                     }
                     //perform Dct on subArray
@@ -263,24 +284,7 @@ namespace Codec
                     {
                         for (int subArrayX = 0; subArrayX < 8; subArrayX++)
                         {
-                            comparisonMatrix[height + subArrayY, width + subArrayX] = (int)subArray[subArrayY, subArrayX];
-                            List<int[,]> actualDiffList = new List<int[,]>();
-                            switch (channelString)
-                            {
-                                case "Y":
-                                    actualDiffList = actualDiffListY;
-                                    break;
-                                case "Cb":
-                                    actualDiffList = actualDiffListCb;
-                                    break;
-                                case "Cr":
-                                    actualDiffList = actualDiffListCr;
-                                    break;
-                            }
-                            if(actualDiffList.Count > 0)
-                            {
-                                resultMatrix[height + subArrayY, width + subArrayX] = getOptimizedResult((int)subArray[subArrayY, subArrayX], actualDiffList[actualDiffList.Count - 1][subArrayY, subArrayX], accumulatedChanges[subArrayY, subArrayX]);
-                            }
+                            resultMatrix[height + subArrayY, width + subArrayX] = (int)subArray[subArrayY, subArrayX];
                         }
                     }
                 }
@@ -446,10 +450,10 @@ namespace Codec
             return resultMatrix;
         }
 
-        private int getOptimizedResult(int currentPixel, int previousPixel, int accumulatedChanges)
+        private int getOptimizedResult(int currentPixel, int previousPixel, ref int accumulatedChanges)
         {
-            int maxDifferenceThisFrame = 2;
-            int maxDifferenceKeyFrame = 5;
+            int maxDifferenceThisFrame = 5;
+            int maxDifferenceKeyFrame = 15;
 
             int currentDiff = currentPixel - previousPixel;
             accumulatedChanges = (accumulatedChanges == int.MaxValue) ? currentDiff : accumulatedChanges + currentDiff;

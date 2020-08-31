@@ -576,13 +576,11 @@ namespace Codec
 
             for (int i = start; i < finish; i++)
             {
-                
                 DctImage dctImage = new DctImage(tempImages[i], quality, actualDiffListY, actualDiffListCb, actualDiffListCr, accumulatedChanges);
 
                 yDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Y");
                 cBDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cb");
                 cRDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cr");
-                
                 
                 // it's not a keyframe
                 if (i % keyFrameEvery != 0)
@@ -639,9 +637,7 @@ namespace Codec
                     actualDiffListY.Clear();
                     actualDiffListCb.Clear();
                     actualDiffListCr.Clear();
-                    count = 0;
                 }
-                count++;
 
                 yDctQuanFromLastFrame = yDctQuan;
                 cBDctQuanFromLastFrame = cBDctQuan;
