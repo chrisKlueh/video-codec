@@ -32,13 +32,6 @@ namespace Codec
         List<int>[] CbBitArray;
         List<int>[] CrBitArray;
 
-
-        
-        //int yAccDiff = 0;
-        //int cBAccDiff = 0;
-        //int cRAccDiff = 0;
-
-
         Dictionary<int, int>[] YHuffmanCounts;
         Dictionary<int, int>[] CbHuffmanCounts;
         Dictionary<int, int>[] CrHuffmanCounts;
@@ -536,11 +529,15 @@ namespace Codec
         {
             int[,] yDctQuan, cBDctQuan, cRDctQuan, yDiffEncoded, cBDiffEncoded, cRDiffEncoded;
             int[] yRunLenEncoded, cBRunLenEncoded, cRRunLenEncoded;
-            int[,] accumulatedChanges = null;
-            int count = 0;
-            List<int[,]> actualDiffListY = new List<int[,]>();
-            List<int[,]> actualDiffListCb = new List<int[,]>();
-            List<int[,]> actualDiffListCr = new List<int[,]>();
+            int[,] accumulatedChangesY = null;
+            int[,] accumulatedChangesCb = null;
+            int[,] accumulatedChangesCr = null;
+            int[,] actualValuesY = null;
+            int[,] actualValuesCb = null;
+            int[,] actualValuesCr = null;
+            List<int[,]> actualValuesListY = new List<int[,]>();
+            List<int[,]> actualValuesListCb = new List<int[,]>();
+            List<int[,]> actualValuesListCr = new List<int[,]>();
 
             // needed for multi huffman encoding
             int[][] YHuffmanValues = new int[keyFrameEvery][];
@@ -576,18 +573,15 @@ namespace Codec
 
             for (int i = start; i < finish; i++)
             {
-                DctImage dctImage = new DctImage(tempImages[i], quality, actualDiffListY, actualDiffListCb, actualDiffListCr, accumulatedChanges);
+                DctImage dctImage = new DctImage(tempImages[i], quality, actualValuesListY, actualValuesListCb, actualValuesListCr, actualValuesY, actualValuesCb, actualValuesCr, accumulatedChangesY, accumulatedChangesCb, accumulatedChangesCr);
 
                 yDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Y");
                 cBDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cb");
                 cRDctQuan = dctImage.PerformDctAndQuantization(tempImages[i], "Cr");
-                
+
                 // it's not a keyframe
                 if (i % keyFrameEvery != 0)
                 {
-                //    getOptimizedResult(yDctQuan, actualDiffListY[count - 1], accumulatedChanges);
-                //    getOptimizedResult(cBDctQuan, actualDiffListCb[count - 1], accumulatedChanges);
-                //    getOptimizedResult(cRDctQuan, actualDiffListCr[count - 1], accumulatedChanges);
                     for (int j = 0; j < yDctQuanFromLastFrame.GetLength(0); j++)
                     {
                         for (int k = 0; k < yDctQuanFromLastFrame.GetLength(1); k++)
@@ -626,17 +620,33 @@ namespace Codec
                     cBDctQuanDiff = new int[cBDctQuan.GetLength(0), cBDctQuan.GetLength(1)];
                     cRDctQuanDiff = new int[cRDctQuan.GetLength(0), cRDctQuan.GetLength(1)];
 
-                    accumulatedChanges = new int[yDctQuan.GetLength(0), yDctQuan.GetLength(1)];
-                    for (int x = 0; x < accumulatedChanges.GetLength(0); x++)
+                    accumulatedChangesY = new int[yDctQuan.GetLength(0), yDctQuan.GetLength(1)];
+                    accumulatedChangesCb = new int[cBDctQuan.GetLength(0), cBDctQuan.GetLength(1)];
+                    accumulatedChangesCr = new int[cRDctQuan.GetLength(0), cRDctQuan.GetLength(1)];
+                    actualValuesY = new int[yDctQuan.GetLength(0), yDctQuan.GetLength(1)];
+                    actualValuesCb = new int[cBDctQuan.GetLength(0), cBDctQuan.GetLength(1)];
+                    actualValuesCr = new int[cRDctQuan.GetLength(0), cRDctQuan.GetLength(1)];
+                    for (int x = 0; x < accumulatedChangesY.GetLength(0); x++)
                     {
-                        for (int y = 0; y < accumulatedChanges.GetLength(1); y++)
+                        for (int y = 0; y < accumulatedChangesY.GetLength(1); y++)
                         {
-                            accumulatedChanges[x, y] = int.MaxValue;
+                            accumulatedChangesY[x, y] = int.MaxValue;
+                            actualValuesY[x, y] = int.MaxValue;
                         }
                     }
-                    actualDiffListY.Clear();
-                    actualDiffListCb.Clear();
-                    actualDiffListCr.Clear();
+                    for (int x = 0; x < accumulatedChangesCb.GetLength(0); x++)
+                    {
+                        for (int y = 0; y < accumulatedChangesCb.GetLength(1); y++)
+                        {
+                            accumulatedChangesCb[x, y] = int.MaxValue;
+                            accumulatedChangesCr[x, y] = int.MaxValue;
+                            actualValuesCb[x, y] = int.MaxValue;
+                            actualValuesCr[x, y] = int.MaxValue;
+                        }
+                    }
+                    //actualValuesListY.Clear();
+                    //actualValuesListCb.Clear();
+                    //actualValuesListCr.Clear();
                 }
 
                 yDctQuanFromLastFrame = yDctQuan;

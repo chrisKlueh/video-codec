@@ -7,11 +7,17 @@ namespace Codec
     {
         private YCbCrImage image;
        
-        private List<int[,]> actualDiffListY;
-        private List<int[,]> actualDiffListCb;
-        private List<int[,]> actualDiffListCr;
+        private List<int[,]> actualValuesListY;
+        private List<int[,]> actualValuesListCb;
+        private List<int[,]> actualValuesListCr;
 
-        private int[,] accumulatedChanges;
+        private int[,] actualValuesY;
+        private int[,] actualValuesCb;
+        private int[,] actualValuesCr;
+
+        private int[,] accumulatedChangesY;
+        private int[,] accumulatedChangesCb;
+        private int[,] accumulatedChangesCr;
 
         public string subsamplingMode = "4:4:4";
         
@@ -55,12 +61,17 @@ namespace Codec
             CalculateQuantizationMatrix(this.qualityFactor);
         }
 
-        public DctImage(YCbCrImage image, int qualityFactor, List<int[,]> actualDiffListY, List<int[,]> actualDiffListCb, List<int[,]> actualDiffListCr, int[,] accumulatedChanges)
+        public DctImage(YCbCrImage image, int qualityFactor, List<int[,]> actualValuesListY, List<int[,]> actualValuesListCb, List<int[,]> actualValuesListCr, int[,] actualValuesY, int[,] actualValuesCb, int[,] actualValuesCr, int[,] accumulatedChangesY, int[,] accumulatedChangesCb, int[,] accumulatedChangesCr)
         {
-            this.actualDiffListY = actualDiffListY;
-            this.actualDiffListCb = actualDiffListCb;
-            this.actualDiffListCr = actualDiffListCr;
-            this.accumulatedChanges = accumulatedChanges;
+            this.actualValuesListY = actualValuesListY;
+            this.actualValuesListCb = actualValuesListCb;
+            this.actualValuesListCr = actualValuesListCr;
+            this.actualValuesY = actualValuesY;
+            this.actualValuesCb = actualValuesCb;
+            this.actualValuesCr = actualValuesCr;
+            this.accumulatedChangesY = accumulatedChangesY;
+            this.accumulatedChangesCb = accumulatedChangesCb;
+            this.accumulatedChangesCr = accumulatedChangesCr;
             this.image = image;
             subsamplingMode = image.subsamplingMode;
             //set qualityFactor to 50 (=base quantization matrix) if given qualityFactor is not in defined range
@@ -239,17 +250,25 @@ namespace Codec
         {
             int[,] resultMatrix = new int[valueMatrix.GetLength(0), valueMatrix.GetLength(1)];
             int[,] comparisonMatrix = new int[valueMatrix.GetLength(0), valueMatrix.GetLength(1)];
-            List<int[,]> actualDiffList = new List<int[,]>();
+            List<int[,]> actualValuesList = new List<int[,]>();
+            int[,] actualValues = null;
+            int[,] accumulatedChanges = null;
             switch (channelString)
             {
                 case "Y":
-                    actualDiffList = actualDiffListY;
+                    actualValues = actualValuesY;
+                    actualValuesList = actualValuesListY;
+                    accumulatedChanges = accumulatedChangesY;
                     break;
                 case "Cb":
-                    actualDiffList = actualDiffListCb;
+                    actualValues = actualValuesCb;
+                    actualValuesList = actualValuesListCb;
+                    accumulatedChanges = accumulatedChangesCb;
                     break;
                 case "Cr":
-                    actualDiffList = actualDiffListCr;
+                    actualValues = actualValuesCr;
+                    actualValuesList = actualValuesListCr;
+                    accumulatedChanges = accumulatedChangesCr;
                     break;
             }
             //iterate the valueMatrix in 8x8 blocks
@@ -264,17 +283,16 @@ namespace Codec
                     {
                         for (int subArrayX = 0; subArrayX < 8; subArrayX++)
                         {
-                            if (actualDiffList.Count > 0)
+                            //subArray[subArrayY, subArrayX] = valueMatrix[height + subArrayY, width + subArrayX];
+                            subArray[subArrayY, subArrayX] = valueMatrix[height + subArrayY, width + subArrayX];
+                            if (actualValuesList.Count > 0)
                             {
-                                subArray[subArrayY, subArrayX] = getOptimizedResult((int)valueMatrix[height + subArrayY, width + subArrayX], actualDiffList[actualDiffList.Count - 1][subArrayY, subArrayX], ref accumulatedChanges[subArrayY, subArrayX]);
-                            }
-                            else
-                            {
-                                subArray[subArrayY, subArrayX] = valueMatrix[height + subArrayY, width + subArrayX];
+                                subArray[subArrayY, subArrayX] = getOptimizedResult((int)valueMatrix[height + subArrayY, width + subArrayX], ref actualValues[height + subArrayY, width + subArrayX], actualValuesList[actualValuesList.Count - 1][height + subArrayY, width + subArrayX], ref accumulatedChanges[height + subArrayY, width + subArrayX]);
                             }
                             comparisonMatrix[height + subArrayY, width + subArrayX] = (int)valueMatrix[height + subArrayY, width + subArrayX];
                         }
                     }
+
                     //perform Dct on subArray
                     subArray = Dct(subArray);
                     //perform Quantization on subArray
@@ -292,16 +310,16 @@ namespace Codec
 
             switch(channelString) {
                 case "Y":
-                    this.actualDiffListY.Add(comparisonMatrix);
+                    this.actualValuesListY.Add(comparisonMatrix);
                     break;
                 case "Cb":
-                    this.actualDiffListCb.Add(comparisonMatrix);
+                    this.actualValuesListCb.Add(comparisonMatrix);
                     break;
                 case "Cr":
-                    this.actualDiffListCr.Add(comparisonMatrix);
+                    this.actualValuesListCr.Add(comparisonMatrix);
                     break;
             }
-            
+
             //return the fully transformed and quantized resultMatrix
             return resultMatrix;
         }
@@ -450,25 +468,30 @@ namespace Codec
             return resultMatrix;
         }
 
-        private int getOptimizedResult(int currentPixel, int previousPixel, ref int accumulatedChanges)
+        private int getOptimizedResult(int currentPixel, ref int previouslyUsedPixel, int previousPixel, ref int accumulatedChanges)
         {
             int maxDifferenceThisFrame = 5;
-            int maxDifferenceKeyFrame = 15;
+            int maxDifferenceKeyFrame = 10;
+
+            if (previouslyUsedPixel == int.MaxValue)
+            {
+                previouslyUsedPixel = previousPixel;
+            }
 
             int currentDiff = currentPixel - previousPixel;
             accumulatedChanges = (accumulatedChanges == int.MaxValue) ? currentDiff : accumulatedChanges + currentDiff;
             if (Math.Abs(currentDiff) < maxDifferenceThisFrame && Math.Abs(accumulatedChanges) < maxDifferenceKeyFrame)
             {
-                currentPixel = previousPixel;
+                currentPixel = previouslyUsedPixel;
             }
             else
             {
-                currentPixel = previousPixel + accumulatedChanges;
+                currentPixel = previouslyUsedPixel + accumulatedChanges;
                 accumulatedChanges = int.MaxValue;
+                previouslyUsedPixel = int.MaxValue;
             }
 
             return currentPixel;
         }
     }
 }
-
