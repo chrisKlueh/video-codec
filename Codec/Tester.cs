@@ -21,7 +21,20 @@ namespace Codec
             {
                 for (int j = 0; j < ints.GetLength(1); j++)
                 {
-                    str += ints[i, j];
+                    str += ints[i, j] + ", ";
+                }
+            }
+            PrintToFile(filename, str);
+        }
+
+        public static void PrintToFile(string filename, double[,] doubles)
+        {
+            string str = "";
+            for (int i = 0; i < doubles.GetLength(0); i++)
+            {
+                for (int j = 0; j < doubles.GetLength(1); j++)
+                {
+                    str += doubles[i, j] + ", ";
                 }
             }
             PrintToFile(filename, str);
@@ -33,6 +46,16 @@ namespace Codec
             for (int i = 0; i < ints.Length; i++)
             {
                     str += ints[i] + ", ";
+            }
+            PrintToFile(filename, str);
+        }
+
+        public static void PrintToFile(string filename, double[] doubles)
+        {
+            string str = "";
+            for (int i = 0; i < doubles.Length; i++)
+            {
+                str += doubles[i] + ", ";
             }
             PrintToFile(filename, str);
         }
