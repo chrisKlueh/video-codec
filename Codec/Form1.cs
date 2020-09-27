@@ -177,7 +177,7 @@ namespace Codec
                 timeBar.LargeChange = keyFrameEvery;
                 timeBar.SmallChange = keyFrameEvery;
                 timeBar.TickFrequency = keyFrameEvery;
-                UpdateHuffmanCounts();
+                // UpdateHuffmanCounts();
             } else
             {
                 // TODO: alert error?
